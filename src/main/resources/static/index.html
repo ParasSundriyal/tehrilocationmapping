@@ -3,54 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tehri Map</title>
+    <title>TehriMap - Discover Tehri</title>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
-    <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         #map {
-            height: 80vh;
+            height: calc(100vh - 128px); /* Subtract navbar and footer height */
             width: 100%;
-            border-radius: 0.5rem;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .mobile-menu {
+            display: none;
+        }
+        .mobile-menu.active {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .desktop-menu {
+                display: none;
+            }
+        }
+        @media (min-width: 769px) {
+            #mobile-menu-button {
+                display: none;
+            }
         }
     </style>
 </head>
-<body class="gradient-bg min-h-screen">
+<body class="flex flex-col min-h-screen">
+    <!-- Navigation -->
     <nav class="bg-white shadow-lg">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
                 <div class="flex items-center">
-                    <span class="text-xl font-bold text-gray-800">Tehri Map</span>
+                    <a href="/" class="text-2xl font-bold text-blue-600">TehriMap</a>
                 </div>
-                <div class="space-x-4">
-                    <a href="login.html" class="text-blue-500 hover:text-blue-700">Login</a>
-                    <a href="signup.html" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Sign Up
-                    </a>
+                
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-600 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+
+                <!-- Desktop menu -->
+                <div class="desktop-menu flex items-center space-x-4">
+                    <a href="/" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+                    <a href="login.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                    <a href="signup.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">Sign Up</a>
                 </div>
+            </div>
+            
+            <!-- Mobile menu -->
+            <div id="mobile-menu" class="mobile-menu pb-4">
+                <a href="/" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Home</a>
+                <a href="login.html" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Login</a>
+                <a href="signup.html" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Sign Up</a>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h1 class="text-3xl font-bold mb-4 text-center text-gray-800">Welcome to Tehri</h1>
-            <p class="text-gray-600 text-center mb-6">Explore the beautiful city of Tehri, Uttarakhand</p>
-            <div id="map"></div>
-        </div>
-    </div>
+    <!-- Map Container -->
+    <main class="flex-grow">
+        <div id="map"></div>
+    </main>
 
-    <!-- Leaflet JS -->
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-4">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-sm mb-2 md:mb-0">
+                    © 2024 TehriMap. All rights reserved.
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="mailto:paras.starkmarkup@gmail.com" class="text-gray-400 hover:text-white text-sm transition flex items-center">
+                        <i class="fas fa-envelope mr-2"></i>
+                        Contact
+                    </a>
+                    <button class="text-gray-400 hover:text-white text-sm transition">
+                        <i class="fas fa-headset mr-2"></i>
+                        Support
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
     <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('active');
+        });
+
         // Initialize the map centered at Tehri
         const map = L.map('map').setView([30.3753, 78.4337], 13);
 
@@ -60,28 +111,47 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Add a marker for Tehri
-        const tehriMarker = L.marker([30.3753, 78.4337]).addTo(map);
-        tehriMarker.bindPopup("<b>Tehri</b><br>Uttarakhand, India").openPopup();
-
-        // Add some points of interest
-        const pointsOfInterest = [
+        // Important locations in Tehri
+        const locations = [
             {
                 name: "Tehri Dam",
                 coords: [30.3753, 78.4337],
-                description: "One of the highest dams in the world"
+                description: "One of the highest dams in the world",
+                icon: "🏞️"
             },
             {
                 name: "Tehri Lake",
                 coords: [30.3853, 78.4437],
-                description: "Beautiful artificial lake formed by Tehri Dam"
+                description: "Beautiful artificial lake for water sports and recreation",
+                icon: "💧"
+            },
+            {
+                name: "New Tehri Town",
+                coords: [30.3795, 78.4308],
+                description: "Administrative headquarters of Tehri Garhwal district",
+                icon: "🏘️"
+            },
+            {
+                name: "Tehri Bus Station",
+                coords: [30.3845, 78.4327],
+                description: "Main bus terminal connecting Tehri to other cities",
+                icon: "🚌"
+            },
+            {
+                name: "District Hospital",
+                coords: [30.3805, 78.4317],
+                description: "Main healthcare facility in Tehri",
+                icon: "🏥"
             }
         ];
 
-        // Add markers for points of interest
-        pointsOfInterest.forEach(poi => {
-            L.marker(poi.coords)
-                .bindPopup(`<b>${poi.name}</b><br>${poi.description}`)
+        // Add markers for important locations
+        locations.forEach(location => {
+            const marker = L.marker(location.coords)
+                .bindPopup(`
+                    <div class="text-lg font-bold">${location.icon} ${location.name}</div>
+                    <div class="text-gray-600">${location.description}</div>
+                `)
                 .addTo(map);
         });
     </script>
