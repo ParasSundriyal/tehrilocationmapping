@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superadmin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">Superadmin Dashboard</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="username" class="text-gray-600"></span>
+                    <button onclick="logout()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Admin Management Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Admin Management</h2>
+                <div class="space-y-4">
+                    <!-- Create Admin Form -->
+                    <form id="createAdminForm" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="adminUsername">
+                                Username
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                   id="adminUsername" type="text" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="adminEmail">
+                                Email
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                   id="adminEmail" type="email" required>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="adminPassword">
+                                Password
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                   id="adminPassword" type="password" required>
+                        </div>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                            Create Admin
+                        </button>
+                    </form>
+
+                    <!-- Admin List -->
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold mb-4">Admin List</h3>
+                        <div id="adminList" class="space-y-4">
+                            <!-- Admin entries will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Markers Management Section -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">Map Markers Management</h2>
+                <!-- Add Marker Form -->
+                <form id="markerForm" class="space-y-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="markerName">
+                            Marker Name
+                        </label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                               id="markerName" type="text" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="markerDescription">
+                            Description
+                        </label>
+                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                  id="markerDescription" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="markerType">
+                            Type
+                        </label>
+                        <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                id="markerType" required>
+                            <option value="TOURIST_SPOT">Tourist Spot</option>
+                            <option value="HOSPITAL">Hospital</option>
+                            <option value="SCHOOL">School</option>
+                            <option value="RESTAURANT">Restaurant</option>
+                            <option value="HOTEL">Hotel</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="markerLatitude">
+                                Latitude
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                   id="markerLatitude" type="number" step="any" required readonly>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="markerLongitude">
+                                Longitude
+                            </label>
+                            <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                   id="markerLongitude" type="number" step="any" required readonly>
+                        </div>
+                    </div>
+                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
+                        Add Marker
+                    </button>
+                </form>
+                <div id="map" class="w-full h-96 bg-gray-200 rounded mb-4">
+                    <!-- Map will be loaded here -->
+                </div>
+                <div id="markerList" class="space-y-4 mt-4">
+                    <h3 class="text-xl font-bold mb-4">Existing Markers</h3>
+                    <!-- Marker list will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Global variables
+        let map;
+        let selectedMarker = null;
+        let markers = [];
+
+        // Custom emoji icons for different marker types
+        const markerIcons = {
+            TOURIST_SPOT: '🏛️',
+            HOSPITAL: '🏥',
+            SCHOOL: '🏫',
+            RESTAURANT: '🍽️',
+            HOTEL: '🏨'
+        };
+
+        // Create custom icon for marker
+        function createCustomIcon(type) {
+            return L.divIcon({
+                html: `<span style="font-size: 2rem;">${markerIcons[type] || '📍'}</span>`,
+                className: 'custom-marker',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
+        }
+
+        // Initialize map
+        function initMap() {
+            // Add custom marker style
+            const style = document.createElement('style');
+            style.textContent = `
+                .custom-marker {
+                    background: none;
+                    border: none;
+                    text-align: center;
+                }
+                .custom-marker:hover {
+                    transform: scale(1.2);
+                    transition: transform 0.2s;
+                }
+            `;
+            document.head.appendChild(style);
+
+            map = L.map('map').setView([30.3753, 78.4337], 13); // Default center at Dehradun
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add click event to map
+            map.on('click', function(e) {
+                if (selectedMarker) {
+                    map.removeLayer(selectedMarker);
+                }
+                const markerType = document.getElementById('markerType').value;
+                selectedMarker = L.marker(e.latlng, {
+                    icon: createCustomIcon(markerType)
+                }).addTo(map);
+                document.getElementById('markerLatitude').value = e.latlng.lat.toFixed(6);
+                document.getElementById('markerLongitude').value = e.latlng.lng.toFixed(6);
+            });
+
+            // Add marker type change event
+            document.getElementById('markerType').addEventListener('change', function() {
+                if (selectedMarker) {
+                    const newIcon = createCustomIcon(this.value);
+                    selectedMarker.setIcon(newIcon);
+                }
+            });
+        }
+
+        // Load markers
+        async function loadMarkers() {
+            try {
+                const response = await fetch('http://localhost:8080/api/markers', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const markerData = await response.json();
+                    // Clear existing markers
+                    markers.forEach(marker => map.removeLayer(marker));
+                    markers = [];
+                    
+                    // Clear marker list
+                    const markerList = document.getElementById('markerList');
+                    markerList.innerHTML = '<h3 class="text-xl font-bold mb-4">Existing Markers</h3>';
+
+                    // Add markers to map and list
+                    markerData.forEach(marker => {
+                        // Add to map with custom icon
+                        const mapMarker = L.marker([marker.latitude, marker.longitude], {
+                            icon: createCustomIcon(marker.markerType)
+                        })
+                            .bindPopup(`<b>${marker.name}</b><br>${marker.description}<br>Type: ${marker.markerType}`)
+                            .addTo(map);
+                        markers.push(mapMarker);
+
+                        // Add to list with emoji
+                        const markerElement = document.createElement('div');
+                        markerElement.className = 'bg-gray-100 p-4 rounded flex justify-between items-center';
+                        markerElement.innerHTML = `
+                            <div>
+                                <div class="font-bold">
+                                    <span class="mr-2">${markerIcons[marker.markerType] || '📍'}</span>
+                                    ${marker.name}
+                                </div>
+                                <div class="text-sm text-gray-600">${marker.description}</div>
+                                <div class="text-xs text-gray-500">Type: ${marker.markerType}</div>
+                            </div>
+                            <button onclick="deleteMarker('${marker.id}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">
+                                Delete
+                            </button>
+                        `;
+                        markerList.appendChild(markerElement);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading markers:', error);
+            }
+        }
+
+        // Add marker
+        document.getElementById('markerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const markerData = {
+                name: document.getElementById('markerName').value,
+                description: document.getElementById('markerDescription').value,
+                markerType: document.getElementById('markerType').value,
+                latitude: parseFloat(document.getElementById('markerLatitude').value),
+                longitude: parseFloat(document.getElementById('markerLongitude').value)
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/markers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(markerData)
+                });
+
+                if (response.ok) {
+                    alert('Marker added successfully');
+                    document.getElementById('markerForm').reset();
+                    if (selectedMarker) {
+                        map.removeLayer(selectedMarker);
+                        selectedMarker = null;
+                    }
+                    loadMarkers();
+                } else {
+                    const data = await response.json();
+                    alert('Failed to add marker: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error adding marker:', error);
+                alert('Error adding marker');
+            }
+        });
+
+        // Delete marker
+        async function deleteMarker(markerId) {
+            if (!confirm('Are you sure you want to delete this marker?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/markers/${markerId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Marker deleted successfully');
+                    loadMarkers();
+                } else {
+                    const data = await response.json();
+                    alert('Failed to delete marker: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error deleting marker:', error);
+                alert('Error deleting marker');
+            }
+        }
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadUserInfo();
+            loadAdmins();
+            initMap();
+            loadMarkers();
+        });
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/user', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    document.getElementById('username').textContent = userData.username;
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        // Load admin list
+        async function loadAdmins() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/admins', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const admins = await response.json();
+                    const adminList = document.getElementById('adminList');
+                    adminList.innerHTML = '';
+
+                    admins.forEach(admin => {
+                        const adminElement = document.createElement('div');
+                        adminElement.className = 'bg-gray-100 p-4 rounded flex justify-between items-center';
+                        adminElement.innerHTML = `
+                            <div>
+                                <div class="font-bold">${admin.username}</div>
+                                <div class="text-sm text-gray-600">${admin.email}</div>
+                            </div>
+                            <button onclick="deleteAdmin('${admin.id}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">
+                                Delete
+                            </button>
+                        `;
+                        adminList.appendChild(adminElement);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading admins:', error);
+            }
+        }
+
+        // Create admin
+        document.getElementById('createAdminForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const adminData = {
+                username: document.getElementById('adminUsername').value,
+                email: document.getElementById('adminEmail').value,
+                password: document.getElementById('adminPassword').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/create-admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(adminData)
+                });
+
+                if (response.ok) {
+                    alert('Admin created successfully');
+                    document.getElementById('createAdminForm').reset();
+                    loadAdmins();
+                } else {
+                    const data = await response.json();
+                    alert('Failed to create admin: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error creating admin:', error);
+                alert('Error creating admin');
+            }
+        });
+
+        // Delete admin
+        async function deleteAdmin(adminId) {
+            if (!confirm('Are you sure you want to delete this admin?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/auth/admins/${adminId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Admin deleted successfully');
+                    loadAdmins();
+                } else {
+                    const data = await response.json();
+                    alert('Failed to delete admin: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error deleting admin:', error);
+                alert('Error deleting admin');
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html> 

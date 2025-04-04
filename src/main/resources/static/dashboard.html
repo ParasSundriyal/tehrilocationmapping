@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .custom-marker {
+            background: none;
+            border: none;
+            text-align: center;
+        }
+        .custom-marker:hover {
+            transform: scale(1.2);
+            transition: transform 0.2s;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">User Dashboard</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="username" class="text-gray-600"></span>
+                    <button onclick="logout()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-6">Map View</h2>
+            
+            <!-- Map -->
+            <div id="map" class="w-full h-96 rounded mb-6"></div>
+
+            <!-- Marker List -->
+            <div>
+                <h3 class="text-xl font-bold mb-4">Available Locations</h3>
+                <div id="markerList" class="space-y-4">
+                    <!-- Markers will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Global variables
+        let map;
+        let markers = [];
+
+        // Custom emoji icons for different marker types
+        const markerIcons = {
+            TOURIST_SPOT: '🏛️',
+            HOSPITAL: '🏥',
+            SCHOOL: '🏫',
+            RESTAURANT: '🍽️',
+            HOTEL: '🏨'
+        };
+
+        // Create custom icon for marker
+        function createCustomIcon(type) {
+            return L.divIcon({
+                html: `<span style="font-size: 2rem;">${markerIcons[type] || '📍'}</span>`,
+                className: 'custom-marker',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
+        }
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([30.3753, 78.4337], 13); // Default center at Dehradun
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('http://localhost:8080/api/auth/user', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    document.getElementById('username').textContent = userData.username;
+                    loadMarkers();
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+        // Load markers
+        async function loadMarkers() {
+            try {
+                const response = await fetch('http://localhost:8080/api/markers', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const markerData = await response.json();
+                    // Clear existing markers
+                    markers.forEach(marker => map.removeLayer(marker));
+                    markers = [];
+                    
+                    // Clear marker list
+                    const markerList = document.getElementById('markerList');
+                    markerList.innerHTML = '';
+
+                    // Add markers to map and list
+                    markerData.forEach(marker => {
+                        // Add to map
+                        const mapMarker = L.marker([marker.latitude, marker.longitude], {
+                            icon: createCustomIcon(marker.markerType)
+                        })
+                            .bindPopup(`<b>${marker.name}</b><br>${marker.description}<br>Type: ${marker.markerType}`)
+                            .addTo(map);
+                        markers.push(mapMarker);
+
+                        // Add to list
+                        const markerElement = document.createElement('div');
+                        markerElement.className = 'bg-gray-100 p-4 rounded flex justify-between items-center';
+                        markerElement.innerHTML = `
+                            <div>
+                                <div class="font-bold">
+                                    <span class="mr-2">${markerIcons[marker.markerType] || '📍'}</span>
+                                    ${marker.name}
+                                </div>
+                                <div class="text-sm text-gray-600">${marker.description}</div>
+                                <div class="text-xs text-gray-500">Type: ${marker.markerType}</div>
+                            </div>
+                        `;
+                        markerList.appendChild(markerElement);
+
+                        // Add click event to list item to focus map on marker
+                        markerElement.addEventListener('click', () => {
+                            map.setView([marker.latitude, marker.longitude], 15);
+                            mapMarker.openPopup();
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading markers:', error);
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            initMap();
+            loadUserInfo();
+        });
+    </script>
+</body>
+</html> 
