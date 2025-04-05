@@ -29,10 +29,7 @@ A web-based mapping application for Tehri with user, admin, and superadmin roles
 
 ## Default Accounts
 
-- Superadmin:
-  - Username: superadmin
-  - Email: superadmin@tehrimap.com
-  - Password: (configured in DatabaseInitializer)
+
 
 ## Security Notes
 
