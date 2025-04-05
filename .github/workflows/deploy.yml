@@ -27,12 +27,17 @@ jobs:
         MONGODB_URI: ${{ secrets.MONGODB_URI }}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         
+    - name: Copy static files
+      run: |
+        mkdir -p backend
+        cp -r src/main/resources/static/* backend/
+        cp target/*.jar backend/
+        
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./target
-        destination_dir: backend
+        publish_dir: ./backend
         
     - name: Upload artifact
       uses: actions/upload-artifact@v2
