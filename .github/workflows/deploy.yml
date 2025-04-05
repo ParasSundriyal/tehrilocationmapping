@@ -21,9 +21,31 @@ jobs:
         
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-      
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./target
+        destination_dir: backend
+        
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
         name: tehrimap-backend
-        path: target/*.jar 
+        path: target/*.jar
+
+    - name: List target directory
+      run: ls -la target/
+      
+    - name: Run Spring Boot application
+      run: |
+        java -jar target/*.jar &
+        echo "Spring Boot application started"
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PORT: 8080 
