@@ -3,8 +3,9 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-FROM openjdk:17-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+ENV PORT=8080
+EXPOSE ${PORT}
+CMD ["java", "-jar", "app.jar"]
