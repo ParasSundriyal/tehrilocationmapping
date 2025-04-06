@@ -95,6 +95,7 @@
                     <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                            id="password" type="password" placeholder="Password" required>
                 </div>
+                <div id="errorMessage" class="text-red-500 text-sm hidden"></div>
                 <div class="flex items-center justify-between">
                     <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                             type="submit">
@@ -114,11 +115,19 @@
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const errorMessageDiv = document.getElementById('errorMessage');
+
+            // Clear previous error messages
+            errorMessageDiv.classList.add('hidden');
+            errorMessageDiv.textContent = '';
 
             const payload = {
                 username: username,
                 password: password
             };
+
+            console.log('Attempting login with username:', username);
+            console.log('API URL:', config.apiBaseUrl);
 
             try {
                 const response = await fetch(`${config.apiBaseUrl}/api/auth/login`, {
@@ -129,9 +138,26 @@
                     body: JSON.stringify(payload)
                 });
 
-                const data = await response.json();
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers));
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                    console.log('Response data:', data);
+                } else {
+                    const textData = await response.text();
+                    console.log('Response text:', textData);
+                    try {
+                        data = JSON.parse(textData);
+                    } catch (e) {
+                        throw new Error('Invalid response format');
+                    }
+                }
 
                 if (response.ok) {
+                    console.log('Login successful, role:', data.role);
                     localStorage.setItem('token', data.token);
                     
                     // Redirect based on role
@@ -143,13 +169,24 @@
                         window.location.href = 'dashboard.html';
                     }
                 } else {
-                    alert('Login failed: ' + data.message);
+                    const errorMessage = data.message || 'Login failed. Please check your credentials.';
+                    errorMessageDiv.textContent = errorMessage;
+                    errorMessageDiv.classList.remove('hidden');
+                    console.error('Login failed:', errorMessage);
                 }
             } catch (error) {
-                alert('An error occurred during login');
-                console.error('Error:', error);
+                console.error('Login error:', error);
+                errorMessageDiv.textContent = 'An error occurred during login. Please try again.';
+                errorMessageDiv.classList.remove('hidden');
             }
         });
+
+        // Add error message display function
+        function showError(message) {
+            const errorMessageDiv = document.getElementById('errorMessage');
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+        }
     </script>
     
     <!-- Modern Footer -->
