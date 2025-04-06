@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard - TehriMap</title>
+    <title>Admin Dashboard - TehriMap</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -333,33 +333,55 @@
         }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <span class="text-2xl font-bold text-blue-600">TehriMap</span>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="flex flex-col md:flex-row w-full gap-4">
+            <div class="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+                <span class="text-2xl font-bold text-white">TehriMap</span>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <a href="admin.html" class="text-white px-3 py-2 rounded-md text-sm font-medium bg-blue-600">Add Markers</a>
+                    <a href="manage-markers.html" class="text-white hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Manage Markers</a>
                 </div>
+            </div>
 
-                <div class="district-search flex-1 max-w-lg mx-4">
-                    <select id="districtSearch" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select a district...</option>
-                    </select>
+            <div class="search-container">
+                <div class="district-search flex-1">
+                    <div class="relative">
+                        <select id="districtSearch" class="search-select">
+                            <option value="">Select a district...</option>
+                            <option value="all">All Districts</option>
+                        </select>
+                    </div>
                 </div>
+                
+                <div class="police-search flex-1">
+                    <div class="relative">
+                        <input type="text" id="policeSearch" 
+                               placeholder="Search police stations..." 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div id="policeSearchResults" class="search-results"></div>
+                    </div>
+                </div>
+                
+                <button id="findNearestPoliceBtn" class="police-search-btn">
+                    <i class="fas fa-shield-alt"></i>
+                    Find Nearest
+                </button>
+            </div>
 
-                <div class="flex items-center space-x-4">
-                    <button id="logoutBtn" class="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </button>
-                </div>
+            <div class="flex justify-center md:justify-end">
+                <button id="logoutBtn" class="text-red-400 hover:text-red-300 px-3 py-2 rounded-md text-sm font-medium">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
             </div>
         </div>
     </nav>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
-        <!-- Admin Controls (Only visible to admins) -->
-        <div class="col-span-1 order-2 md:order-1 admin-controls">
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 md:grid-cols-4 h-[calc(100vh-64px)]">
+        <!-- Marker Form Column -->
+        <div class="col-span-1 overflow-y-auto p-4 order-2 md:order-1">
             <div class="marker-form">
                 <h2 class="text-xl font-bold mb-4">Add New Marker</h2>
                 <form id="markerForm" class="space-y-4">
@@ -406,7 +428,7 @@
             </div>
         </div>
 
-        <!-- Map (Visible to all users) -->
+        <!-- Map Column -->
         <div class="col-span-1 md:col-span-3 order-1 md:order-2">
             <div id="map"></div>
         </div>
@@ -433,38 +455,6 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
     <script>
-        // Check user role and redirect if necessary
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Decode the JWT token to get user role
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const userRole = payload.role;
-                
-                // Update UI based on role
-                if (userRole === 'USER') {
-                    // Hide admin-only elements
-                    document.querySelector('.marker-form').style.display = 'none';
-                    document.querySelector('.admin-controls').style.display = 'none';
-                    document.title = 'User Dashboard - TehriMap';
-                } else if (userRole === 'ADMIN') {
-                    document.title = 'Admin Dashboard - TehriMap';
-                } else if (userRole === 'SUPERADMIN') {
-                    window.location.href = 'superadmin.html';
-                    return;
-                }
-            } catch (error) {
-                console.error('Error parsing token:', error);
-                window.location.href = 'login.html';
-                return;
-            }
-        });
-
         // Uttarakhand districts data with coordinates
         const uttarakhandDistricts = [
             { name: "Tehri Garhwal", lat: 30.3753, lng: 78.4337 },
@@ -559,31 +549,18 @@
                 map.setView([district.lat, district.lng], 11);
             }
 
-            // Modify map click handler to check role before allowing marker placement
+            // Add click handler for map to set marker coordinates
             map.on('click', function(e) {
-                const token = localStorage.getItem('token');
-                if (!token) return;
-
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const userRole = payload.role;
-                    
-                    // Only allow admins to add markers
-                    if (userRole === 'ADMIN') {
-                        const lat = e.latlng.lat;
-                        const lng = e.latlng.lng;
-                        
-                        document.getElementById('markerLatitude').value = lat.toFixed(6);
-                        document.getElementById('markerLongitude').value = lng.toFixed(6);
-                        
-                        // On mobile, show the marker form
-                        if (window.innerWidth <= 768) {
-                            const markerForm = document.querySelector('.marker-form');
-                            markerForm.classList.add('show');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error checking user role:', error);
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                document.getElementById('markerLatitude').value = lat.toFixed(6);
+                document.getElementById('markerLongitude').value = lng.toFixed(6);
+                
+                // On mobile, show the marker form
+                if (window.innerWidth <= 768) {
+                    const markerForm = document.querySelector('.marker-form');
+                    markerForm.classList.add('show');
                 }
             });
 
@@ -591,10 +568,10 @@
             loadMarkers();
         }
 
-        // Modify loadMarkers to handle user role
+        // Update the loadMarkers function
         async function loadMarkers() {
             try {
-                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
+                const response = await fetch('http://localhost:8080/api/markers', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -604,50 +581,57 @@
                     const markerData = await response.json();
                     
                     // Clear existing markers
-                    markers.forEach(marker => marker.remove());
+                    markers.forEach(marker => {
+                        if (map && marker) {
+                            map.removeLayer(marker);
+                        }
+                    });
                     markers = [];
-
-                    // Get user role
-                    const token = localStorage.getItem('token');
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const userRole = payload.role;
                     
                     // Add new markers
-                    markerData.forEach(data => {
-                        if (!data.latitude || !data.longitude) {
-                            console.warn('Invalid marker data:', data);
+                    markerData.forEach(marker => {
+                        if (!marker.latitude || !marker.longitude) {
+                            console.error('Invalid marker data:', marker);
                             return;
                         }
-
-                        const marker = L.marker([data.latitude, data.longitude], {
-                            icon: createCustomIcon(data.markerType)
+                        
+                        const mapMarker = L.marker([marker.latitude, marker.longitude], {
+                            icon: createCustomIcon(marker.markerType)
                         });
-
-                        // Create popup content based on user role
-                        let popupContent = `
+                        
+                        const popupContent = `
                             <div class="popup-content">
-                                <div class="popup-title">${data.name}</div>
-                                <div class="popup-description">${data.description}</div>
-                                <div class="popup-type">Type: ${data.markerType.replace('_', ' ')}</div>
+                                <div class="popup-title">${marker.name}</div>
+                                <div class="popup-description">${marker.description}</div>
+                                <div class="popup-type">
+                                    <span class="font-medium">Type:</span> ${marker.markerType.replace('_', ' ')}
+                                </div>
+                                <div class="flex gap-2 mt-3">
+                                    ${marker.markerType === 'POLICE_STATION' ? `
+                                        <button onclick="editMarker(markers[${markers.length}], ${marker.id})" 
+                                                class="flex-1 bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors">
+                                            <i class="fas fa-edit mr-1"></i>Edit
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="deleteMarker(${marker.id})" 
+                                            class="flex-1 bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700 transition-colors">
+                                        <i class="fas fa-trash-alt mr-1"></i>Delete
+                                    </button>
+                                </div>
                             </div>
                         `;
-
-                        // Add delete button only for admins
-                        if (userRole === 'ADMIN') {
-                            popupContent += `
-                                <button onclick="deleteMarker('${data.id}')" 
-                                        class="popup-delete">
-                                    <i class="fas fa-trash-alt mr-1"></i>Delete
-                                </button>
-                            `;
-                        }
-
-                        marker.bindPopup(popupContent);
-                        marker.addTo(map);
-                        markers.push(marker);
+                        
+                        mapMarker.bindPopup(popupContent);
+                        mapMarker.addTo(map);
+                        markers.push(mapMarker);
                     });
+                    
+                    // Update police stations list if needed
+                    if (typeof updatePoliceStationsList === 'function') {
+                        updatePoliceStationsList();
+                    }
                 } else {
-                    console.error('Failed to load markers:', response.status);
+                    console.error('Failed to load markers:', await response.text());
                 }
             } catch (error) {
                 console.error('Error loading markers:', error);
@@ -765,8 +749,8 @@
         });
 
         // Update police stations list when district changes
-        function updatePoliceStationsList(newStations) {
-            policeStations = newStations || [];
+        function updatePoliceStationsList() {
+            policeStations = [];
             markers.forEach(marker => {
                 const markerData = marker.getPopup().getContent();
                 if (markerData.includes('POLICE_STATION')) {
@@ -775,14 +759,11 @@
                     const nameMatch = markerData.match(/<div class="popup-title">(.*?)<\/div>/);
                     const name = nameMatch ? nameMatch[1] : 'Police Station';
                     
-                    const existingStation = policeStations.find(s => s.name === name);
-                    if (!existingStation) {
-                        policeStations.push({
-                            name: name,
-                            latitude: latLng.lat,
-                            longitude: latLng.lng
-                        });
-                    }
+                    policeStations.push({
+                        name: name,
+                        latitude: latLng.lat,
+                        longitude: latLng.lng
+                    });
                 }
             });
         }
@@ -817,8 +798,8 @@
         });
 
         // Add this new function for editing markers
-        function editMarker(markerId) {
-            const popupContent = selectedMarker.getPopup().getContent();
+        function editMarker(marker, markerId) {
+            const popupContent = marker.getPopup().getContent();
             const nameMatch = popupContent.match(/<div class="popup-title">(.*?)<\/div>/);
             const descriptionMatch = popupContent.match(/<div class="popup-description">(.*?)<\/div>/s);
             
@@ -837,8 +818,8 @@
             document.getElementById('markerDescription').value = description;
             document.getElementById('markerType').value = 'POLICE_STATION';
 
-            document.getElementById('markerLatitude').value = selectedMarker.getLatLng().lat;
-            document.getElementById('markerLongitude').value = selectedMarker.getLatLng().lng;
+            document.getElementById('markerLatitude').value = marker.getLatLng().lat;
+            document.getElementById('markerLongitude').value = marker.getLatLng().lng;
 
             // Scroll to the form
             document.querySelector('.marker-form').scrollIntoView({ behavior: 'smooth' });
@@ -859,7 +840,7 @@
                 };
 
                 try {
-                    const response = await fetch(`${config.apiBaseUrl}/api/markers/${markerId}`, {
+                    const response = await fetch(`http://localhost:8080/api/markers/${markerId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -889,24 +870,22 @@
         document.getElementById('markerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const lat = parseFloat(document.getElementById('markerLatitude').value);
-            const lng = parseFloat(document.getElementById('markerLongitude').value);
-
-            if (isNaN(lat) || isNaN(lng)) {
-                alert('Please set marker coordinates by clicking on the map.');
-                return;
-            }
-
             const markerData = {
                 name: document.getElementById('markerName').value,
                 description: document.getElementById('markerDescription').value,
                 markerType: document.getElementById('markerType').value,
-                latitude: lat,
-                longitude: lng
+                latitude: parseFloat(document.getElementById('markerLatitude').value),
+                longitude: parseFloat(document.getElementById('markerLongitude').value)
             };
 
+            // Validate coordinates
+            if (isNaN(markerData.latitude) || isNaN(markerData.longitude)) {
+                alert('Please click on the map to set marker coordinates first');
+                return;
+            }
+
             try {
-                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
+                const response = await fetch('http://localhost:8080/api/markers', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -916,17 +895,26 @@
                 });
 
                 if (response.ok) {
-                    const result = await response.json();
-                    alert(result.message || 'Marker added successfully!');
                     document.getElementById('markerForm').reset();
+                    if (selectedMarker) {
+                        map.removeLayer(selectedMarker);
+                        selectedMarker = null;
+                    }
                     loadMarkers();
+                    alert('Marker added successfully!');
+                    
+                    // On mobile, hide the marker form after successful submission
+                    if (window.innerWidth <= 768) {
+                        const markerForm = document.querySelector('.marker-form');
+                        markerForm.classList.remove('show');
+                    }
                 } else {
-                    const error = await response.json();
-                    alert(error.message || 'Failed to add marker');
+                    const data = await response.json();
+                    alert('Failed to add marker: ' + (data.message || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error adding marker:', error);
-                alert('Error adding marker');
+                alert('Error adding marker: ' + error.message);
             }
         });
 
@@ -934,7 +922,7 @@
         async function deleteMarker(markerId) {
             if (confirm('Are you sure you want to delete this marker?')) {
                 try {
-                    const response = await fetch(`${config.apiBaseUrl}/api/markers/${markerId}`, {
+                    const response = await fetch(`http://localhost:8080/api/markers/${markerId}`, {
                         method: 'DELETE',
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}`
