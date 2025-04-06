@@ -9,6 +9,7 @@
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/config.js"></script>
     <style>
         .container {
             display: flex;
@@ -774,7 +775,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:8080/api/markers', {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -890,7 +891,7 @@
         // Load markers
         async function loadMarkers() {
             try {
-                const response = await fetch('http://localhost:8080/api/markers', {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -938,7 +939,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:8080/api/markers/${markerId}`, {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers/${markerId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
