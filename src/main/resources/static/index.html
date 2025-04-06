@@ -10,6 +10,7 @@
           crossorigin=""/>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/config.js"></script>
     <style>
         #map {
             height: calc(100vh - 64px); /* Subtract navbar height */
@@ -17,12 +18,15 @@
         }
         .mobile-menu {
             display: none;
+            background-color: white;
+            border-top: 1px solid #e5e7eb;
         }
         .mobile-menu.active {
             display: block;
         }
         .district-search {
             position: relative;
+            width: 100%;
         }
         .search-results {
             position: absolute;
@@ -50,11 +54,70 @@
             .desktop-menu {
                 display: none;
             }
-        }
-        @media (min-width: 769px) {
-            #mobile-menu-button {
+            .navbar-container {
+                flex-direction: column;
+                padding: 1rem 0;
+            }
+            .logo-container {
+                width: 100%;
+                justify-content: space-between;
+                margin-bottom: 1rem;
+            }
+            .district-search {
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+            .mobile-menu-button {
+                display: block;
+            }
+            .auth-buttons {
                 display: none;
             }
+        }
+        @media (min-width: 769px) {
+            .mobile-menu-button {
+                display: none;
+            }
+            .navbar-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 0;
+            }
+            .left-section {
+                display: flex;
+                align-items: center;
+                gap: 2rem;
+                flex: 1;
+            }
+            .auth-buttons {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+        }
+        .custom-marker {
+            background: none;
+            border: none;
+            text-align: center;
+        }
+        .custom-marker:hover {
+            transform: scale(1.2);
+            transition: transform 0.2s;
+        }
+        .marker-popup {
+            font-size: 14px;
+        }
+        .marker-popup h3 {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .marker-popup p {
+            margin: 5px 0;
+        }
+        .marker-popup .type {
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
@@ -62,35 +125,48 @@
     <!-- Navigation -->
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex items-center">
-                    <a href="/" class="text-2xl font-bold text-blue-600">TehriMap</a>
-                </div>
+            <div class="navbar-container">
+                <div class="left-section">
+                    <!-- Logo -->
+                    <div class="logo-container">
+                        <a href="/" class="text-2xl font-bold text-blue-600">TehriMap</a>
+                    </div>
 
-                <!-- District Search -->
-                <div class="district-search flex-1 max-w-lg mx-4">
-                    <div class="relative">
-                        <input type="text" id="districtSearch" 
-                               placeholder="Search Uttarakhand districts..." 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <div id="searchResults" class="search-results"></div>
+                    <!-- District Search -->
+                    <div class="district-search">
+                        <div class="relative">
+                            <input type="text" id="districtSearch" 
+                                   placeholder="Search Uttarakhand districts..." 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <div id="searchResults" class="search-results"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Desktop menu -->
+                    <div class="desktop-menu">
+                        <a href="/" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
                     </div>
                 </div>
-                
-                <!-- Desktop menu -->
-                <div class="desktop-menu flex items-center space-x-4">
-                    <a href="/" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="mobile-menu-button text-gray-600 hover:text-blue-600 focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+
+                <!-- Auth buttons (Login/Signup) -->
+                <div class="auth-buttons">
                     <a href="login.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
                     <a href="signup.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">Sign Up</a>
                 </div>
             </div>
             
             <!-- Mobile menu -->
-            <div id="mobile-menu" class="mobile-menu pb-4">
-                <a href="/" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Home</a>
-                <a href="login.html" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Login</a>
-                <a href="signup.html" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Sign Up</a>
+            <div id="mobile-menu" class="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="/" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Home</a>
+                    <a href="login.html" class="block text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium">Login</a>
+                    <a href="signup.html" class="block bg-blue-600 text-white px-3 py-2 rounded-md text-base font-medium">Sign Up</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -144,6 +220,28 @@
             { name: "Uttarkashi", lat: 30.7268, lng: 78.4354 }
         ];
 
+        // Custom emoji icons for different marker types
+        const markerIcons = {
+            TOURIST_SPOT: '🏛️',
+            HOSPITAL: '🏥',
+            SCHOOL: '🏫',
+            RESTAURANT: '🍽️',
+            HOTEL: '🏨',
+            POLICE_STATION: '👮',
+            CUSTOM: '📍'
+        };
+
+        // Create custom icon for marker
+        function createCustomIcon(type) {
+            return L.divIcon({
+                html: `<span style="font-size: 2rem;">${markerIcons[type] || '📍'}</span>`,
+                className: 'custom-marker',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
+        }
+
         // Initialize map centered on Uttarakhand
         const map = L.map('map').setView([30.0668, 79.0193], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -157,6 +255,38 @@
                 .bindPopup(`<b>${district.name}</b>`)
                 .addTo(map);
         });
+
+        // Load markers from the API
+        async function loadMarkers() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers`);
+                if (response.ok) {
+                    const markers = await response.json();
+                    markers.forEach(marker => {
+                        if (marker.latitude && marker.longitude) {
+                            L.marker([marker.latitude, marker.longitude], {
+                                icon: createCustomIcon(marker.markerType)
+                            })
+                            .bindPopup(`
+                                <div class="marker-popup">
+                                    <h3>${marker.name}</h3>
+                                    <p>${marker.description}</p>
+                                    <p class="type">Type: ${marker.markerType.replace('_', ' ')}</p>
+                                </div>
+                            `)
+                            .addTo(map);
+                        }
+                    });
+                } else {
+                    console.error('Failed to load markers:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading markers:', error);
+            }
+        }
+
+        // Load markers when the page loads
+        document.addEventListener('DOMContentLoaded', loadMarkers);
 
         // Search functionality
         const searchInput = document.getElementById('districtSearch');
@@ -196,8 +326,18 @@
         });
 
         // Mobile menu toggle
-        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('active');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!mobileMenu.contains(event.target) && !mobileMenuButton.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+            }
         });
     </script>
 </body>
