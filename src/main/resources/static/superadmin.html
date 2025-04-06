@@ -539,7 +539,7 @@
         // Fetch and display admin list
         async function loadAdmins() {
             try {
-                const response = await fetch('http://localhost:8080/api/auth/admins', {
+                const response = await fetch(`${config.apiBaseUrl}/api/auth/admins`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -549,6 +549,17 @@
                     const admins = await response.json();
                     const adminTableBody = document.getElementById('adminTableBody');
                     adminTableBody.innerHTML = '';
+                    
+                    if (admins.length === 0) {
+                        adminTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                    No admins found. Use the buttons above to create one.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
                     
                     admins.forEach(admin => {
                         const row = document.createElement('tr');
@@ -585,10 +596,21 @@
                         `;
                         adminTableBody.appendChild(row);
                     });
+                } else {
+                    const error = await response.text();
+                    console.error('Failed to load admins:', error);
+                    throw new Error('Failed to load admin list');
                 }
             } catch (error) {
                 console.error('Error loading admins:', error);
-                alert('Error loading admin list');
+                const adminTableBody = document.getElementById('adminTableBody');
+                adminTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-red-500">
+                            Error loading admin list. Please try again later.
+                        </td>
+                    </tr>
+                `;
             }
         }
 
@@ -599,7 +621,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:8080/api/auth/admin/${adminId}`, {
+                const response = await fetch(`${config.apiBaseUrl}/api/auth/admin/${adminId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -607,14 +629,15 @@
                 });
                 
                 if (response.ok) {
-                    loadAdmins(); // Refresh the admin list
+                    await loadAdmins(); // Refresh the admin list
                     alert('Admin deleted successfully');
                 } else {
-                    alert('Failed to delete admin');
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete admin');
                 }
             } catch (error) {
                 console.error('Error deleting admin:', error);
-                alert('Error deleting admin');
+                alert(error.message || 'Error deleting admin');
             }
         }
 
@@ -622,7 +645,7 @@
         async function createAdmin(adminData) {
             try {
                 console.log('Creating admin with data:', adminData);
-                const response = await fetch('http://localhost:8080/api/auth/create-admin', {
+                const response = await fetch(`${config.apiBaseUrl}/api/auth/create-admin`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -636,12 +659,12 @@
                     })
                 });
 
+                const data = await response.json();
+                
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to create admin');
+                    throw new Error(data.message || 'Failed to create admin');
                 }
 
-                const data = await response.json();
                 console.log('Admin created successfully:', data);
                 await loadAdmins(); // Refresh admin list
                 return true;
@@ -947,28 +970,11 @@
                 });
 
                 if (response.ok) {
-                    // Remove marker from map if it exists
-                    const markerToRemove = markers.find(marker => {
-                        const latLng = marker.getLatLng();
-                        // Find the marker in our data that matches this map marker
-                        return markerData.some(data => 
-                            data.id === markerId && 
-                            Math.abs(data.latitude - latLng.lat) < 0.0001 && 
-                            Math.abs(data.longitude - latLng.lng) < 0.0001
-                        );
-                    });
-                    
-                    if (markerToRemove) {
-                        map.removeLayer(markerToRemove);
-                        markers = markers.filter(m => m !== markerToRemove);
-                    }
-                    
-                    // Refresh the marker list
                     loadMarkers();
                     alert('Marker deleted successfully');
                 } else {
-                    const data = await response.json();
-                    alert('Failed to delete marker: ' + (data.message || 'Unknown error'));
+                    const error = await response.json();
+                    alert('Failed to delete marker: ' + error.message);
                 }
             } catch (error) {
                 console.error('Error deleting marker:', error);
