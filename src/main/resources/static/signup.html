@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Sign Up - TehriMap</title>
+    <script src="js/config.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -82,7 +83,7 @@
     </div>
 
     <script>
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
@@ -99,7 +100,6 @@
                 return;
             }
 
-            // Create the request payload
             const payload = {
                 username: username,
                 email: email,
@@ -109,7 +109,7 @@
             console.log('Sending signup request with payload:', payload);
 
             try {
-                const response = await fetch('http://localhost:8080/api/auth/signup', {
+                const response = await fetch(`${config.apiBaseUrl}/api/auth/signup`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
