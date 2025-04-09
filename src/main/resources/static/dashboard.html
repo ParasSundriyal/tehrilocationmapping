@@ -6,6 +6,8 @@
     <title>User Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/config.js"></script>
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,6 +21,46 @@
             transform: scale(1.2);
             transition: transform 0.2s;
         }
+        #map {
+            height: 70vh;
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+        .marker-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .marker-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .marker-item:hover {
+            background-color: #f3f4f6;
+        }
+        .marker-icon {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+        .marker-info {
+            flex: 1;
+        }
+        .marker-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .marker-type {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .district-search {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+        }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
@@ -26,12 +68,18 @@
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
-                    <span class="text-xl font-bold text-gray-800">User Dashboard</span>
+                    <span class="text-xl font-bold text-gray-800">TehriMap</span>
+                </div>
+                <div class="district-search mx-4">
+                    <select id="districtSearch" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select a district...</option>
+                    </select>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span id="username" class="text-gray-600"></span>
-                    <button onclick="logout()" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                        Logout
+                    <button onclick="logout()" class="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
                     </button>
                 </div>
             </div>
@@ -39,69 +87,22 @@
     </nav>
 
     <div class="container mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold mb-6">Map View</h2>
-            
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <!-- Map -->
-            <div id="map" class="w-full h-96 rounded mb-6"></div>
-
-            <!-- Marker Form -->
-            <div class="mb-6">
-                <h3 class="text-xl font-bold mb-4">Add New Marker</h3>
-                <form id="markerForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Marker Name</label>
-                        <input type="text" id="markerName" required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea id="markerDescription" required
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Type</label>
-                        <select id="markerType" required
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            <option value="TOURIST_SPOT">Tourist Spot</option>
-                            <option value="HOSPITAL">Hospital</option>
-                            <option value="SCHOOL">School</option>
-                            <option value="RESTAURANT">Restaurant</option>
-                            <option value="HOTEL">Hotel</option>
-                            <option value="POLICE_STATION">Police Station</option>
-                            <option value="CUSTOM">Custom</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Latitude</label>
-                            <input type="number" id="markerLatitude" step="any" required readonly
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Longitude</label>
-                            <input type="number" id="markerLongitude" step="any" required readonly
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button type="button" onclick="clearMarkerSelection()"
-                                class="w-1/2 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                            Clear Selection
-                        </button>
-                        <button type="submit"
-                                class="w-1/2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                            Add Marker
-                        </button>
-                    </div>
-                </form>
+            <div class="col-span-1 md:col-span-3">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4">Map View</h2>
+                    <div id="map"></div>
+                </div>
             </div>
 
             <!-- Marker List -->
-            <div>
-                <h3 class="text-xl font-bold mb-4">Available Locations</h3>
-                <div id="markerList" class="space-y-4">
-                    <!-- Markers will be listed here -->
+            <div class="col-span-1">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">Available Locations</h2>
+                    <div class="marker-list" id="markerList">
+                        <!-- Markers will be listed here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -112,7 +113,21 @@
         // Global variables
         let map;
         let markers = [];
-        let selectedMarker = null;
+        const uttarakhandDistricts = [
+            { name: "Tehri Garhwal", lat: 30.3753, lng: 78.4337 },
+            { name: "Dehradun", lat: 30.3165, lng: 78.0322 },
+            { name: "Haridwar", lat: 29.9457, lng: 78.1642 },
+            { name: "Pauri Garhwal", lat: 30.1469, lng: 78.7808 },
+            { name: "Rudraprayag", lat: 30.2844, lng: 78.9811 },
+            { name: "Chamoli", lat: 30.4227, lng: 79.3286 },
+            { name: "Pithoragarh", lat: 29.5828, lng: 80.2181 },
+            { name: "Almora", lat: 29.5892, lng: 79.6467 },
+            { name: "Nainital", lat: 29.3919, lng: 79.4542 },
+            { name: "Udham Singh Nagar", lat: 28.9610, lng: 79.5152 },
+            { name: "Champawat", lat: 29.3362, lng: 80.0911 },
+            { name: "Bageshwar", lat: 29.8362, lng: 79.7713 },
+            { name: "Uttarkashi", lat: 30.7268, lng: 78.4354 }
+        ];
 
         // Custom emoji icons for different marker types
         const markerIcons = {
@@ -138,35 +153,33 @@
 
         // Initialize map
         function initMap() {
-            map = L.map('map').setView([30.0668, 79.0193], 7); // Center on Uttarakhand
+            map = L.map('map').setView([30.0668, 79.0193], 7);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
-            // Add map click handler to set marker coordinates
-            map.on('click', function(e) {
-                const lat = e.latlng.lat;
-                const lng = e.latlng.lng;
-                
-                // Update form fields
-                document.getElementById('markerLatitude').value = lat.toFixed(6);
-                document.getElementById('markerLongitude').value = lng.toFixed(6);
-                
-                // Remove previous selected marker if exists
-                if (selectedMarker) {
-                    map.removeLayer(selectedMarker);
-                }
-                
-                // Add a temporary marker at the clicked location
-                selectedMarker = L.marker([lat, lng], {
-                    icon: createCustomIcon(document.getElementById('markerType').value)
-                }).addTo(map);
-                
-                // Show the marker form if it's hidden (mobile view)
-                const markerForm = document.getElementById('markerForm');
-                if (markerForm) {
-                    markerForm.scrollIntoView({ behavior: 'smooth' });
+            // Add district markers
+            uttarakhandDistricts.forEach(district => {
+                L.marker([district.lat, district.lng])
+                    .bindPopup(`<b>${district.name}</b>`)
+                    .addTo(map);
+            });
+
+            // Initialize district dropdown
+            const districtSelect = document.getElementById('districtSearch');
+            uttarakhandDistricts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district.name;
+                option.textContent = district.name;
+                districtSelect.appendChild(option);
+            });
+
+            // Add district selection handler
+            districtSelect.addEventListener('change', function() {
+                const selectedDistrict = uttarakhandDistricts.find(d => d.name === this.value);
+                if (selectedDistrict) {
+                    map.setView([selectedDistrict.lat, selectedDistrict.lng], 11);
                 }
             });
         }
@@ -174,7 +187,7 @@
         // Load user info
         async function loadUserInfo() {
             try {
-                const response = await fetch('http://localhost:8080/api/auth/user', {
+                const response = await fetch(`${config.apiBaseUrl}/api/auth/user`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -184,16 +197,19 @@
                     const userData = await response.json();
                     document.getElementById('username').textContent = userData.username;
                     loadMarkers();
+                } else {
+                    window.location.href = 'login.html';
                 }
             } catch (error) {
                 console.error('Error loading user info:', error);
+                window.location.href = 'login.html';
             }
         }
 
         // Load markers
         async function loadMarkers() {
             try {
-                const response = await fetch('http://localhost:8080/api/markers', {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -201,45 +217,51 @@
 
                 if (response.ok) {
                     const markerData = await response.json();
-                    // Clear existing markers
-                    markers.forEach(marker => map.removeLayer(marker));
-                    markers = [];
                     
-                    // Clear marker list
+                    // Clear existing markers
+                    markers.forEach(marker => marker.remove());
+                    markers = [];
+
+                    // Update marker list
                     const markerList = document.getElementById('markerList');
                     markerList.innerHTML = '';
 
-                    // Add markers to map and list
-                    markerData.forEach(marker => {
-                        // Add to map
-                        const mapMarker = L.marker([marker.latitude, marker.longitude], {
-                            icon: createCustomIcon(marker.markerType)
+                    markerData.forEach(data => {
+                        if (!data.latitude || !data.longitude) return;
+
+                        // Add marker to map
+                        const marker = L.marker([data.latitude, data.longitude], {
+                            icon: createCustomIcon(data.markerType)
                         })
-                            .bindPopup(`<b>${marker.name}</b><br>${marker.description}<br>Type: ${marker.markerType}`)
-                            .addTo(map);
-                        markers.push(mapMarker);
+                        .bindPopup(`
+                            <div class="p-2">
+                                <h3 class="font-bold">${data.name}</h3>
+                                <p class="text-gray-600">${data.description}</p>
+                                <p class="text-sm text-gray-500 mt-2">Type: ${data.markerType.replace('_', ' ')}</p>
+                            </div>
+                        `)
+                        .addTo(map);
+                        
+                        markers.push(marker);
 
                         // Add to list
-                        const markerElement = document.createElement('div');
-                        markerElement.className = 'bg-gray-100 p-4 rounded flex justify-between items-center';
-                        markerElement.innerHTML = `
-                            <div>
-                                <div class="font-bold">
-                                    <span class="mr-2">${markerIcons[marker.markerType] || '📍'}</span>
-                                    ${marker.name}
-                                </div>
-                                <div class="text-sm text-gray-600">${marker.description}</div>
-                                <div class="text-xs text-gray-500">Type: ${marker.markerType}</div>
+                        const listItem = document.createElement('div');
+                        listItem.className = 'marker-item';
+                        listItem.innerHTML = `
+                            <span class="marker-icon">${markerIcons[data.markerType] || '📍'}</span>
+                            <div class="marker-info">
+                                <div class="marker-name">${data.name}</div>
+                                <div class="marker-type">${data.markerType.replace('_', ' ')}</div>
                             </div>
                         `;
-                        markerList.appendChild(markerElement);
-
-                        // Add click event to list item to focus map on marker
-                        markerElement.addEventListener('click', () => {
-                            map.setView([marker.latitude, marker.longitude], 15);
-                            mapMarker.openPopup();
+                        listItem.addEventListener('click', () => {
+                            map.setView([data.latitude, data.longitude], 13);
+                            marker.openPopup();
                         });
+                        markerList.appendChild(listItem);
                     });
+                } else {
+                    console.error('Failed to load markers:', response.status);
                 }
             } catch (error) {
                 console.error('Error loading markers:', error);
@@ -252,8 +274,8 @@
             window.location.href = 'login.html';
         }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = 'login.html';
@@ -261,82 +283,7 @@
             }
             initMap();
             loadUserInfo();
-
-            // Add marker type change handler
-            document.getElementById('markerType').addEventListener('change', function() {
-                if (selectedMarker) {
-                    // Update the temporary marker's icon
-                    selectedMarker.setIcon(createCustomIcon(this.value));
-                }
-            });
-
-            // Add form submission handler
-            document.getElementById('markerForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                // Validate coordinates
-                const latitude = document.getElementById('markerLatitude').value;
-                const longitude = document.getElementById('markerLongitude').value;
-                if (!latitude || !longitude) {
-                    alert('Please select a location on the map first.');
-                    return;
-                }
-
-                const markerData = {
-                    name: document.getElementById('markerName').value,
-                    description: document.getElementById('markerDescription').value,
-                    markerType: document.getElementById('markerType').value,
-                    latitude: parseFloat(latitude),
-                    longitude: parseFloat(longitude)
-                };
-
-                console.log('Submitting marker data:', markerData);
-
-                try {
-                    const response = await fetch('http://localhost:8080/api/markers', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify(markerData)
-                    });
-
-                    console.log('Response status:', response.status);
-                    const responseData = await response.text();
-                    console.log('Response data:', responseData);
-
-                    if (response.ok) {
-                        // Clear form
-                        document.getElementById('markerForm').reset();
-                        clearMarkerSelection();
-                        
-                        // Reload markers
-                        loadMarkers();
-                        
-                        alert('Marker added successfully!');
-                    } else {
-                        alert('Failed to add marker: ' + responseData);
-                    }
-                } catch (error) {
-                    console.error('Error adding marker:', error);
-                    alert('Failed to add marker. Please try again.');
-                }
-            });
         });
-
-        // Clear marker selection
-        function clearMarkerSelection() {
-            // Clear form fields
-            document.getElementById('markerLatitude').value = '';
-            document.getElementById('markerLongitude').value = '';
-            
-            // Remove temporary marker if exists
-            if (selectedMarker) {
-                map.removeLayer(selectedMarker);
-                selectedMarker = null;
-            }
-        }
     </script>
 </body>
 </html> 
