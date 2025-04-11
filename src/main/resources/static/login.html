@@ -141,24 +141,33 @@
                 console.log('Response status:', response.status);
                 console.log('Response headers:', Object.fromEntries(response.headers));
 
-                let data;
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    data = await response.json();
-                    console.log('Response data:', data);
-                } else {
-                    const textData = await response.text();
-                    console.log('Response text:', textData);
-                    try {
-                        data = JSON.parse(textData);
-                    } catch (e) {
-                        throw new Error('Invalid response format');
-                    }
-                }
-
                 if (response.ok) {
+                    let data;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        data = await response.json();
+                        console.log('Login response data:', data);
+                    } else {
+                        const textData = await response.text();
+                        console.log('Response text:', textData);
+                        try {
+                            data = JSON.parse(textData);
+                        } catch (e) {
+                            throw new Error('Invalid response format');
+                        }
+                    }
+                    
                     console.log('Login successful, role:', data.role);
                     localStorage.setItem('token', data.token);
+                    
+                    // Create user object with relevant fields and save to localStorage
+                    const currentUser = {
+                        username: username,
+                        role: data.role,
+                        id: data.id
+                    };
+                    console.log('Saved currentUser to localStorage:', currentUser);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
                     
                     // Redirect based on role
                     if (data.role === 'SUPERADMIN') {
@@ -169,8 +178,13 @@
                         window.location.href = 'dashboard.html';
                     }
                 } else {
-                    const errorMessage = data.message || 'Login failed. Please check your credentials.';
-                    errorMessageDiv.textContent = errorMessage;
+                    const errorMessage = await response.text();
+                    try {
+                        const errorData = JSON.parse(errorMessage);
+                        errorMessageDiv.textContent = errorData.message || 'Login failed. Please check your credentials.';
+                    } catch (e) {
+                        errorMessageDiv.textContent = 'Login failed. Please check your credentials.';
+                    }
                     errorMessageDiv.classList.remove('hidden');
                     console.error('Login failed:', errorMessage);
                 }

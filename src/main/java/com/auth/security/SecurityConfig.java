@@ -52,9 +52,11 @@ public class SecurityConfig {
                 "/*.html",
                 "/error"
             ).permitAll()
+            .requestMatchers("/api/reports").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
             .requestMatchers("/superadmin.html").hasAuthority("ROLE_SUPERADMIN")
             .requestMatchers("/admin.html").hasAuthority("ROLE_ADMIN")
             .requestMatchers("/dashboard.html").authenticated()
+            .requestMatchers("/reports.html").hasAnyAuthority("ROLE_ADMIN", "ROLE_SUPERADMIN")
             .anyRequest().authenticated()
             .and()
             .sessionManagement()

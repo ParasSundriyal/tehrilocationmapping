@@ -122,6 +122,19 @@
                     </select>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <div class="relative">
+                            <i class="fas fa-bell"></i>
+                            <span id="notificationCount" class="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                        </button>
+                            <div class="px-4 py-2 border-b border-gray-200">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-sm font-semibold text-gray-700">Notifications</h3>
+                                </div>
+                            </div>
+                                <!-- Notifications will be populated here -->
+                            </div>
+                        </div>
+                    </div>
                     <button onclick="window.location.href='register-occurrence.html'" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         <i class="fas fa-plus mr-2"></i>Register Occurrence
                     </button>
@@ -167,11 +180,40 @@
 
             <!-- Marker List -->
             <div class="col-span-1">
-                <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="bg-white rounded-lg shadow-lg p-6">
                     <h2 class="text-xl font-bold mb-4">Available Locations</h2>
                     <div class="marker-list" id="markerList">
                         <!-- Markers will be listed here -->
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative">
+                            <i class="fas fa-bell"></i>
+                            <span id="notificationCount" class="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                        </button>
+                            <div class="px-4 py-2 border-b border-gray-200">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="text-sm font-semibold text-gray-700">Notifications</h3>
+                                </div>
+                            </div>
+                                <!-- Notifications will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="ml-4 px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700">
+                        Logout
+                    </button>
                 </div>
             </div>
         </div>
@@ -365,31 +407,53 @@
                 }
 
                 const approvedIncidents = await response.json();
-                console.log(`Loaded ${approvedIncidents.length} approved incidents`);
+                console.log(`Loaded ${approvedIncidents.length} approved incidents:`, approvedIncidents);
                 
                 // Clear existing incident circles
                 incidentCircles.forEach(circle => circle.remove());
                 incidentCircles = [];
                 
+                // Log map bounds for reference
+                const bounds = map.getBounds();
+                console.log("Current map bounds:", bounds);
+                
                 // Add incident circles to the map
-                approvedIncidents.forEach(incident => {
-                    console.log("Processing incident:", incident);
+                approvedIncidents.forEach((incident, index) => {
+                    console.log(`[Incident ${index+1}] Processing incident:`, incident);
+                    console.log(`[Incident ${index+1}] District:`, incident.district);
                     
                     // Check if latitude and longitude exist
-                    if (!incident.latitude || !incident.longitude) {
-                        console.warn("Incident missing coordinates:", incident);
+                    if (!incident.latitude && !incident.longitude) {
+                        console.warn(`[Incident ${index+1}] Missing both latitude and longitude:`, incident);
+                        return;
+                    }
+                    
+                    // Check if latitude and longitude are valid
+                    const lat = Number(incident.latitude);
+                    const lng = Number(incident.longitude);
+                    
+                    if (isNaN(lat) || isNaN(lng)) {
+                        console.warn(`[Incident ${index+1}] Invalid coordinates: lat=${incident.latitude}, lng=${incident.longitude}`);
+                        return;
+                    }
+                    
+                    // Check if latitude and longitude are within reasonable bounds
+                    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                        console.warn(`[Incident ${index+1}] Coordinates out of bounds: lat=${lat}, lng=${lng}`);
                         return;
                     }
                     
                     // Determine styling based on incident type
                     const incidentType = incident.type || 'OTHER';
+                    console.log(`[Incident ${index+1}] Type:`, incidentType);
+                    
                     let circleOptions = {
-                        radius: 200,
+                        radius: 300, // Increased radius for better visibility
                         stroke: true,
                         weight: 3,
-                        opacity: 0.7,
+                        opacity: 0.8,
                         fill: true,
-                        fillOpacity: 0.4
+                        fillOpacity: 0.5
                     };
                     
                     // Set colors based on incident type
@@ -411,25 +475,43 @@
                             circleOptions.fillColor = '#2a9d8f';
                     }
                     
-                    console.log(`Adding circle at [${incident.latitude}, ${incident.longitude}] with type ${incidentType}`);
+                    console.log(`[Incident ${index+1}] Adding circle at [${lat}, ${lng}] with type ${incidentType}`);
                     
                     // Create circle with direct styling
-                    const circle = L.circle([incident.latitude, incident.longitude], circleOptions).addTo(map);
-                    
-                    // Add popup with incident details
-                    circle.bindPopup(`
-                        <div class="p-2">
-                            <h3 class="font-bold">${incident.title}</h3>
-                            <p class="text-gray-600">${incident.description}</p>
-                            <p class="text-sm text-gray-500 mt-2">Type: ${incidentType}</p>
-                            <p class="text-sm text-gray-500">District: ${incident.district || 'Not specified'}</p>
-                            <p class="text-sm text-gray-500">Date: ${new Date(incident.timestamp).toLocaleDateString()}</p>
-                        </div>
-                    `);
-                    
-                    // Store reference to circle
-                    incidentCircles.push(circle);
+                    try {
+                        const circle = L.circle([lat, lng], circleOptions).addTo(map);
+                        
+                        // Add popup with incident details
+                        circle.bindPopup(`
+                            <div class="p-2">
+                                <h3 class="font-bold">${incident.title || 'Untitled'}</h3>
+                                <p class="text-gray-600">${incident.description || 'No description'}</p>
+                                <p class="text-sm text-gray-500 mt-2">Type: ${incidentType}</p>
+                                <p class="text-sm text-gray-500">District: ${incident.district || 'Not specified'}</p>
+                                <p class="text-sm text-gray-500">Date: ${incident.timestamp ? new Date(incident.timestamp).toLocaleDateString() : 'Unknown'}</p>
+                                <p class="text-sm text-gray-500">Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+                            </div>
+                        `);
+                        
+                        // Store reference to circle
+                        incidentCircles.push(circle);
+                        console.log(`[Incident ${index+1}] Circle added successfully`);
+                        
+                        // If this is the first load, pan to the circle to ensure it's visible
+                        if (index === 0 && approvedIncidents.length > 0) {
+                            console.log(`Panning to first incident at [${lat}, ${lng}]`);
+                        }
+                    } catch (err) {
+                        console.error(`[Incident ${index+1}] Error creating circle:`, err);
+                    }
                 });
+                
+                console.log(`Total incidents processed: ${approvedIncidents.length}, Circles created: ${incidentCircles.length}`);
+                
+                // If no circles were created despite having incidents, log an error
+                if (approvedIncidents.length > 0 && incidentCircles.length === 0) {
+                    console.error("Failed to create any incident circles despite having approved incidents");
+                }
             } catch (error) {
                 console.error('Error loading approved incidents:', error);
                 // We don't want to interrupt the user experience for this feature
@@ -452,6 +534,165 @@
             }
             initMap();
             loadUserInfo();
+        });
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/api/notifications`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load notifications');
+                }
+
+                const notifications = await response.json();
+
+                // Update notification count
+                const unreadCount = notifications.filter(notification => !notification.read).length;
+                const notificationCount = document.getElementById('notificationCount');
+                if (unreadCount > 0) {
+                    notificationCount.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                    notificationCount.classList.remove('hidden');
+                } else {
+                    notificationCount.classList.add('hidden');
+                }
+
+                if (notifications.length === 0) {
+                        <div class="px-4 py-2 text-center text-gray-500 text-sm">
+                            No notifications
+                        </div>
+                    `;
+                    return;
+                }
+
+                notifications.forEach(notification => {
+                    const notificationItem = document.createElement('div');
+                    notificationItem.className = `px-4 py-2 border-b border-gray-100 hover:bg-gray-50 ${notification.read ? '' : 'bg-blue-50'}`;
+                    
+                    notificationItem.innerHTML = `
+                        <div class="cursor-pointer" onclick="markNotificationRead('${notification.id}')">
+                            <div class="flex justify-between">
+                                <p class="text-sm font-medium text-gray-900">${notification.title}</p>
+                                <p class="text-xs text-gray-500">${formatTimeAgo(new Date(notification.timestamp))}</p>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                    <div class="px-4 py-2 text-center text-red-500 text-sm">
+                        Error loading notifications
+                    </div>
+                `;
+            }
+        }
+
+        // Format time ago
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            }
+            
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+            }
+            
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+            }
+            
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays < 30) {
+                return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+            }
+            
+            const diffInMonths = Math.floor(diffInDays / 30);
+            if (diffInMonths < 12) {
+                return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+            }
+            
+            const diffInYears = Math.floor(diffInMonths / 12);
+            return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+        }
+
+        // Mark a notification as read
+        async function markNotificationRead(notificationId) {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/api/notifications/${notificationId}/mark-read`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to mark notification as read');
+                }
+                
+                // Refresh notification count
+                loadNotifications();
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Mark all notifications as read
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/api/notifications/mark-all-read`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to mark notifications as read');
+                }
+
+                loadNotifications();
+            } catch (error) {
+                console.error('Error marking notifications as read:', error);
+                alert('Failed to mark notifications as read');
+            }
+        });
+
+        // Handle notification click
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            if (!dropdown.classList.contains('hidden')) {
+                loadNotifications();
+            }
+        });
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Check for new notifications periodically
+        function startNotificationPolling() {
+            // Check for new notifications every minute
+            setInterval(loadNotifications, 60000);
+            
+            // Initial load
+            loadNotifications();
+        }
+
+        // Start notification polling when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            startNotificationPolling();
         });
     </script>
 </body>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Occurrence - TehriMap</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/config.js"></script>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .photos-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .photo-item {
+            position: relative;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+        }
+        .photo-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+        }
+        .remove-photo {
+            color: #ef4444;
+            cursor: pointer;
+        }
+        .capture-btn {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .capture-btn:hover {
+            background-color: #2563eb;
+        }
+        #camera-container {
+            display: none;
+            margin-top: 1rem;
+        }
+        #camera-feed {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .camera-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .district-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+        .district-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-gray-800">TehriMap</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="window.location.href='dashboard.html'" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </button>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">Register New Occurrence</h2>
+                
+                <!-- Status display -->
+                <div id="statusDisplay" class="mb-4 hidden p-4 rounded-lg"></div>
+                
+                <form id="occurrenceForm" class="space-y-6">
+                    <!-- Location Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Location</label>
+                        
+                        <!-- District Dropdown -->
+                        <select id="districtSelect" class="district-select" required>
+                            <option value="">-- Select a district --</option>
+                            <option value="30.3165,78.0322">Dehradun</option>
+                            <option value="30.7333,79.0667">Tehri</option>
+                            <option value="29.9457,78.1642">Haridwar</option>
+                            <option value="30.1245,79.2785">Pauri</option>
+                            <option value="29.3803,79.4636">Nainital</option>
+                            <option value="30.0668,79.4818">Rudraprayag</option>
+                            <option value="29.5892,79.6544">Almora</option>
+                            <option value="30.2937,79.5603">Chamoli</option>
+                            <option value="29.6304,79.8654">Bageshwar</option>
+                            <option value="30.4318,79.3317">Uttarkashi</option>
+                            <option value="29.2183,79.5130">Champawat</option>
+                            <option value="28.9820,79.5152">Udham Singh Nagar</option>
+                            <option value="29.5864,80.2193">Pithoragarh</option>
+                        </select>
+                        
+                        <div id="map" class="mb-4"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Latitude</label>
+                                <input type="number" id="latitude" step="any" required readonly
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Longitude</label>
+                                <input type="number" id="longitude" step="any" required readonly
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Occurrence Details -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Title</label>
+                        <input type="text" id="title" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="description" rows="4" required
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Type</label>
+                        <select id="type" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Select type...</option>
+                            <option value="INCIDENT">Incident</option>
+                            <option value="HAZARD">Hazard</option>
+                            <option value="CONSTRUCTION">Construction</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Photo Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Photos (up to 4)</label>
+                        <div class="mt-1">
+                            <div class="flex space-x-4">
+                                <label class="flex-1 cursor-pointer py-2 px-4 border border-gray-300 rounded-md text-sm text-center hover:bg-gray-50">
+                                    <span class="text-gray-600"><i class="fas fa-upload mr-2"></i>Upload Photos</span>
+                                    <input type="file" id="photo-upload" accept="image/*" multiple class="hidden">
+                                </label>
+                                <button type="button" id="camera-button" class="flex-1 py-2 px-4 border border-gray-300 rounded-md text-sm text-center hover:bg-gray-50">
+                                    <i class="fas fa-camera mr-2"></i>Take Photo
+                                </button>
+                            </div>
+                            
+                            <!-- Camera Container -->
+                            <div id="camera-container">
+                                <video id="camera-feed" autoplay playsinline></video>
+                                <div class="camera-buttons">
+                                    <button type="button" id="capture-button" class="capture-btn">
+                                        <i class="fas fa-camera mr-2"></i>Capture Photo
+                                    </button>
+                                    <button type="button" id="close-camera" class="py-2 px-4 border border-gray-300 rounded-md text-sm">
+                                        <i class="fas fa-times mr-2"></i>Close Camera
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Photos Preview -->
+                            <div id="photos-preview" class="photos-container mt-4">
+                                <!-- Photo items will be added here dynamically -->
+                            </div>
+                            
+                            <p class="text-sm text-gray-500 mt-2">
+                                <span id="photo-count">0</span>/4 photos selected.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            Register Occurrence
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let marker;
+        let selectedLocation = null;
+        const uttarakhandCenter = [30.0668, 79.0193]; // Center of Uttarakhand
+        const uttarakhandZoom = 8; // Default zoom level for state view
+
+        // Helper function to display status messages
+        function showStatus(message, type = 'info') {
+            const statusDisplay = document.getElementById('statusDisplay');
+            statusDisplay.textContent = message;
+            statusDisplay.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+            
+            if (type === 'success') {
+                statusDisplay.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                statusDisplay.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                statusDisplay.classList.add('bg-blue-100', 'text-blue-800');
+            }
+            
+            statusDisplay.classList.remove('hidden');
+        }
+
+        // Initialize map
+        function initMap() {
+            // Create the map centered on Uttarakhand
+            map = L.map('map').setView(uttarakhandCenter, uttarakhandZoom);
+            
+            // Add OpenStreetMap tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add click handler for manual selection
+            map.on('click', function(e) {
+                setMarker(e.latlng.lat, e.latlng.lng);
+            });
+        }
+        
+        // Function to set marker and update form fields
+        function setMarker(lat, lng) {
+            // Update form fields
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('longitude').value = lng.toFixed(6);
+            
+            // Update or add marker
+            if (marker) {
+                marker.setLatLng([lat, lng]);
+            } else {
+                marker = L.marker([lat, lng]).addTo(map);
+            }
+            
+            selectedLocation = { lat, lng };
+        }
+        
+        // Handle district dropdown change
+        document.getElementById('districtSelect').addEventListener('change', function() {
+            const selectedValue = this.value;
+            if (!selectedValue) return;
+            
+            const [lat, lng] = selectedValue.split(',').map(parseFloat);
+            const districtName = this.options[this.selectedIndex].text;
+            
+            // Center map and set zoom
+            map.setView([lat, lng], 12);
+            
+            // Set marker
+            setMarker(lat, lng);
+            
+            showStatus(`Location set to: ${districtName} district`, 'success');
+        });
+
+        // Test API connectivity on page load
+        async function testApiConnectivity() {
+            try {
+                showStatus('Testing API connectivity...');
+                const response = await fetch(`${config.apiBaseUrl}/api/test/health`);
+                
+                if (response.ok) {
+                    showStatus('API connection successful', 'success');
+                    setTimeout(() => {
+                        document.getElementById('statusDisplay').classList.add('hidden');
+                    }, 3000);
+                } else {
+                    showStatus(`API connection failed: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`API connection error: ${error.message}`, 'error');
+            }
+        }
+
+        // Handle photo preview
+        const photoFiles = [];
+        const MAX_PHOTOS = 4;
+        
+        // Handle file upload
+        document.getElementById('photo-upload').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            if (photoFiles.length + files.length > MAX_PHOTOS) {
+                showStatus(`You can only upload up to ${MAX_PHOTOS} photos. Please remove some photos first.`, 'error');
+                return;
+            }
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    photoFiles.push({
+                        file: file,
+                        source: 'upload'
+                    });
+                    displayPhoto(file);
+                }
+            });
+            
+            updatePhotoCount();
+        });
+        
+        // Handle camera access
+        const cameraButton = document.getElementById('camera-button');
+        const cameraContainer = document.getElementById('camera-container');
+        const cameraFeed = document.getElementById('camera-feed');
+        const captureButton = document.getElementById('capture-button');
+        const closeCamera = document.getElementById('close-camera');
+        let stream = null;
+        
+        cameraButton.addEventListener('click', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                cameraFeed.srcObject = stream;
+                cameraContainer.style.display = 'block';
+                showStatus('Camera activated. Position object in view and click Capture.', 'info');
+            } catch (error) {
+                console.error('Camera error:', error);
+                showStatus(`Camera access error: ${error.message}. Make sure your device has a camera.`, 'error');
+            }
+        });
+        
+        captureButton.addEventListener('click', function() {
+            if (photoFiles.length >= MAX_PHOTOS) {
+                showStatus(`You can only upload up to ${MAX_PHOTOS} photos. Please remove some photos first.`, 'error');
+                return;
+            }
+            
+            // Create a canvas to capture the image
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraFeed.videoWidth;
+            canvas.height = cameraFeed.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+            
+            // Convert canvas to Blob
+            canvas.toBlob(blob => {
+                const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                photoFiles.push({
+                    file: file,
+                    source: 'camera'
+                });
+                displayPhoto(file);
+                updatePhotoCount();
+                showStatus('Photo captured successfully!', 'success');
+            }, 'image/jpeg', 0.8);
+        });
+        
+        closeCamera.addEventListener('click', function() {
+            stopCamera();
+            cameraContainer.style.display = 'none';
+        });
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+        
+        function displayPhoto(file) {
+            const photosPreview = document.getElementById('photos-preview');
+            const photoIndex = photoFiles.length - 1;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item';
+                photoItem.dataset.index = photoIndex;
+                
+                const img = document.createElement('img');
+                img.className = 'photo-preview';
+                img.src = e.target.result;
+                img.alt = 'Preview';
+                
+                const photoActions = document.createElement('div');
+                photoActions.className = 'photo-actions';
+                
+                const removeBtn = document.createElement('span');
+                removeBtn.className = 'remove-photo';
+                removeBtn.innerHTML = '<i class="fas fa-trash"></i> Remove';
+                removeBtn.addEventListener('click', function() {
+                    const index = parseInt(photoItem.dataset.index);
+                    photoFiles.splice(index, 1);
+                    photoItem.remove();
+                    
+                    // Reindex remaining photos
+                    document.querySelectorAll('.photo-item').forEach((item, i) => {
+                        item.dataset.index = i;
+                    });
+                    
+                    updatePhotoCount();
+                });
+                
+                photoActions.appendChild(removeBtn);
+                photoItem.appendChild(img);
+                photoItem.appendChild(photoActions);
+                photosPreview.appendChild(photoItem);
+            }
+            reader.readAsDataURL(file);
+        }
+        
+        function updatePhotoCount() {
+            document.getElementById('photo-count').textContent = photoFiles.length;
+        }
+
+        // Handle form submission
+        document.getElementById('occurrenceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!selectedLocation) {
+                showStatus('Please select a location on the map', 'error');
+                return;
+            }
+            
+            const districtSelect = document.getElementById('districtSelect');
+            if (districtSelect.value === '') {
+                showStatus('Please select a district', 'error');
+                districtSelect.focus();
+                return;
+            }
+
+            // Show loading indicator
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            showStatus('Submitting occurrence data...', 'info');
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('latitude', selectedLocation.lat);
+            formData.append('longitude', selectedLocation.lng);
+            
+            // Get the district name from the select dropdown
+            const selectedOption = districtSelect.options[districtSelect.selectedIndex];
+            const districtName = selectedOption.text;
+            if (districtName && districtName !== '-- Select a district --') {
+                formData.append('district', districtName);
+            }
+            
+            // Append all photos
+            photoFiles.forEach((photoData, index) => {
+                formData.append(`photos[${index}]`, photoData.file);
+            });
+
+            try {
+                console.log('Submitting form data:', {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    type: document.getElementById('type').value,
+                    latitude: selectedLocation.lat,
+                    longitude: selectedLocation.lng,
+                    district: districtName !== '-- Select a district --' ? districtName : 'Not specified',
+                    photoCount: photoFiles.length
+                });
+                
+                // Stop camera if still active
+                stopCamera();
+                
+                // First check if API is available with a simple GET request
+                try {
+                    showStatus('Testing API connectivity before submission...', 'info');
+                    const testResponse = await fetch(`${config.apiBaseUrl}/api/occurrences/test`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    
+                    if (!testResponse.ok) {
+                        throw new Error(`API test failed with status: ${testResponse.status}`);
+                    }
+                    
+                    showStatus('API connection test successful, submitting data...', 'success');
+                } catch (testError) {
+                    console.error('API test error:', testError);
+                    showStatus(`API connection test failed: ${testError.message}. Attempting submission anyway...`, 'error');
+                }
+                
+                // Submit the occurrence with explicit timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                
+                const response = await fetch(`${config.apiBaseUrl}/api/occurrences`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: formData,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        throw new Error(errorJson.message || 'Failed to register occurrence');
+                    } catch (e) {
+                        throw new Error('Failed to register occurrence: ' + errorText);
+                    }
+                }
+                
+                const data = await response.json();
+                console.log('Success response:', data);
+                showStatus('Occurrence registered successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus(`Failed to register occurrence: ${error.message}`, 'error');
+            } finally {
+                // Restore button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            }
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Test API connectivity
+            testApiConnectivity();
+            
+            initMap();
+        });
+    </script>
+</body>
+</html> 
