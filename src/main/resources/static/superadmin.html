@@ -26,9 +26,10 @@
             height: calc(100vh - 128px);
         }
         .map-container {
-            flex: 1;
+            width: 100%;
+            height: 100%;
             position: relative;
-            height: calc(100vh - 128px);
+            z-index: 1;
         }
         #map {
             width: 100%;
@@ -56,6 +57,12 @@
         
         @media (max-width: 768px) {
             .navbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                background: white;
                 padding: 0.5rem;
             }
             
@@ -71,10 +78,61 @@
                 width: 100%;
             }
             
+            .content-wrapper {
+                padding-top: 60px;
+            }
+            
+            .map-container {
+                height: calc(100vh - 60px);
+                width: 100%;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+            
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+            
+            .search-container {
+                position: fixed;
+                top: 70px;
+                left: 10px;
+                right: 10px;
+                z-index: 1000;
+                background: white;
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
             .district-search {
                 width: 100%;
-                max-width: none;
-                margin: 0.5rem 0;
+                margin-bottom: 10px;
+            }
+            
+            .search-input {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .find-nearest {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .leaflet-control-zoom {
+                margin-top: 120px !important;
+            }
+            
+            .logout-button {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1000;
             }
             
             .admin-section {
@@ -82,63 +140,113 @@
                 height: auto;
                 border-right: none;
                 border-bottom: 1px solid #e5e7eb;
+                margin-top: 64px; /* Account for fixed navbar */
             }
             
             .map-container {
-                height: 50vh;
+                height: calc(100vh - 200px);
+                margin-top: 64px;
             }
             
             .grid {
                 grid-template-columns: 1fr !important;
+                margin-top: 64px; /* Account for fixed navbar */
+            }
+
+            #map-management-section {
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 60px);
+                overflow: hidden;
+            }
+
+            #map-management-section .grid {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                margin: 0;
+                padding: 0;
             }
             
-            .overflow-x-auto {
-                margin: 0 -1rem;
+            #map-management-section .col-span-3 {
+                flex: 1;
+                height: 70vh;
+                order: 1;
+            }
+            
+            #map-management-section .col-span-1 {
+                height: 30vh;
+                order: 2;
+                overflow-y: auto;
+                background: white;
+                padding: 1rem;
+                border-top: 1px solid #e5e7eb;
+            }
+
+            #map {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+
+            .marker-form {
+                height: 100%;
+                overflow-y: auto;
+                padding: 1rem;
+                background: white;
+            }
+
+            .district-search {
+                position: fixed;
+                top: 70px;
+                left: 10px;
+                right: 10px;
+                z-index: 1000;
+            }
+            
+            .search-container {
+                background: white;
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            
+            .leaflet-control-zoom {
+                margin-top: 120px !important;
             }
             
             .admin-keys-table {
                 font-size: 0.875rem;
+                overflow-x: auto;
+                display: block;
             }
             
             .admin-keys-table th,
             .admin-keys-table td {
                 padding: 0.5rem;
+                white-space: nowrap;
             }
-            
-            .flex.space-x-3 {
-                flex-direction: column;
-                gap: 0.5rem;
+
+            .reports-section {
+                margin-top: 64px;
+                padding: 1rem;
             }
-            
-            .flex.space-x-3 button {
-                width: 100%;
-            }
-            
-            .flex.justify-between {
-                flex-direction: column;
+
+            .statistics-grid {
+                grid-template-columns: 1fr;
                 gap: 1rem;
             }
-            
-            .flex.justify-between h2 {
-                text-align: center;
-            }
-            
-            #map-management-section .grid {
-                display: flex;
-                flex-direction: column;
-            }
-            
-            #map-management-section .col-span-1 {
-                order: 2;
-            }
-            
-            #map-management-section .col-span-3 {
-                order: 1;
-            }
-            
-            .modal-content {
-                width: 95%;
-                margin: 5% auto;
+
+            .statistics-card {
+                padding: 1rem;
             }
         }
         
@@ -239,6 +347,7 @@
             <div class="flex flex-col md:flex-row gap-2 md:gap-4 py-2">
                 <button onclick="showSection('admin-keys')" class="px-4 py-2 rounded-lg hover:bg-blue-100 tab-button w-full md:w-auto">Admin Keys</button>
                 <button onclick="showSection('map-management')" class="px-4 py-2 rounded-lg hover:bg-blue-100 tab-button w-full md:w-auto">Map Management</button>
+                <button onclick="showSection('reports')" class="px-4 py-2 rounded-lg hover:bg-blue-100 tab-button w-full md:w-auto">Reports</button>
             </div>
         </div>
     </div>
@@ -290,7 +399,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
                 <!-- Map Container -->
                 <div class="col-span-1 md:col-span-3 order-1 md:order-2">
-                    <div id="map" class="h-[50vh] md:h-[calc(100vh-200px)] rounded-lg shadow"></div>
+                    <div id="map" class="h-[75vh] md:h-[calc(100vh-150px)] rounded-lg shadow"></div>
                 </div>
                 
                 <!-- Marker Form Column -->
@@ -343,11 +452,85 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
 
-                    <div class="mt-8">
-                        <h2 class="text-xl font-bold mb-4">Marker List</h2>
-                        <div id="markerList" class="space-y-2 max-h-[400px] overflow-y-auto">
-                            <!-- Markers will be listed here -->
+        <!-- Reports Section -->
+        <div id="reports-section" class="hidden p-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Total Users Card -->
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Users</h3>
+                        <div class="flex items-center">
+                            <i class="fas fa-users text-3xl text-blue-500 mr-3"></i>
+                            <span id="totalUsers" class="text-2xl font-bold">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Total Admins Card -->
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Admins</h3>
+                        <div class="flex items-center">
+                            <i class="fas fa-user-shield text-3xl text-green-500 mr-3"></i>
+                            <span id="totalAdmins" class="text-2xl font-bold">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Total Markers Card -->
+                    <div class="bg-white p-6 rounded-lg shadow-lg">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Total Markers</h3>
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt text-3xl text-red-500 mr-3"></i>
+                            <span id="totalMarkers" class="text-2xl font-bold">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users and Admins Section -->
+                <div class="grid grid-cols-1 gap-6 mb-8">
+                    <!-- Users List -->
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="p-6 border-b">
+                            <h3 class="text-xl font-semibold text-gray-800">System Users</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable" class="bg-white divide-y divide-gray-200">
+                                    <!-- Users will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Markers by Admin Table -->
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="p-6 border-b">
+                            <h3 class="text-xl font-semibold text-gray-800">Markers by Admin</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Markers</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Added</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marker Types</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="markersByAdminTable" class="bg-white divide-y divide-gray-200">
+                                    <!-- Data will be populated here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -462,8 +645,7 @@
             integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
             crossorigin=""></script>
     <script>
-        // Global variables
-        let map;
+        let map = null;
         let selectedMarker = null;
         let markers = [];
         let markerData = [];
@@ -492,56 +674,234 @@
             });
         }
 
+        // Show/Hide sections
+        function showSection(sectionName) {
+            // Hide all sections
+            document.getElementById('admin-keys-section').classList.add('hidden');
+            document.getElementById('map-management-section').classList.add('hidden');
+            document.getElementById('reports-section').classList.add('hidden');
+
+            // Show selected section
+            document.getElementById(`${sectionName}-section`).classList.remove('hidden');
+
+            // Update active tab
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('tab-active');
+                if (button.textContent.toLowerCase().includes(sectionName)) {
+                    button.classList.add('tab-active');
+                }
+            });
+
+            // Load section-specific data
+            if (sectionName === 'map-management') {
+                if (!map) {
+                    initMap();
+                } else {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                        loadMarkers();
+                    }, 100);
+                }
+            } else if (sectionName === 'admin-keys') {
+                loadAdmins();
+            } else if (sectionName === 'reports') {
+                loadReports();
+            }
+        }
+
         // Initialize map
         function initMap() {
-            map = L.map('map').setView([30.0668, 79.0193], 7);
+            if (map) {
+                map.remove();
+            }
+
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                console.error('Map container not found');
+                return;
+            }
+
+            // Center coordinates for Uttarakhand (more central location)
+            const uttarakhandCenter = [30.0668, 79.0193]; // Updated coordinates to center of Uttarakhand
+            map = L.map('map', {
+                center: uttarakhandCenter,
+                zoom: 7.5,
+                minZoom: 7,
+                maxBounds: [
+                    [28.5, 77.0], // Southwest coordinates
+                    [31.5, 81.0]  // Northeast coordinates
+                ]
+            });
+            
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
-            // Add markers for each district
+            // Add district markers
             uttarakhandDistricts.forEach(district => {
-                L.marker([district.lat, district.lng])
+                L.marker([district.lat, district.lng], {
+                    icon: L.divIcon({
+                        html: `<span style="font-size: 1.5rem;">📍</span>`,
+                        className: 'custom-marker',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30],
+                        popupAnchor: [0, -30]
+                    })
+                })
                     .bindPopup(`<b>${district.name}</b>`)
                     .addTo(map);
             });
 
-            // Add map click handler to set marker coordinates
             map.on('click', function(e) {
                 const lat = e.latlng.lat;
                 const lng = e.latlng.lng;
                 
-                // Update form fields
                 document.getElementById('markerLatitude').value = lat.toFixed(6);
                 document.getElementById('markerLongitude').value = lng.toFixed(6);
                 
-                // Remove previous selected marker if exists
                 if (selectedMarker) {
                     map.removeLayer(selectedMarker);
                 }
                 
-                // Add a temporary marker at the clicked location
                 selectedMarker = L.marker([lat, lng], {
-                    icon: createCustomIcon('TOURIST_SPOT')
+                    icon: createCustomIcon(document.getElementById('markerType').value)
                 }).addTo(map);
-                
-                // Show the marker form if it's hidden (mobile view)
-                const markerForm = document.getElementById('markerForm');
-                if (markerForm) {
-                    markerForm.scrollIntoView({ behavior: 'smooth' });
-                }
             });
 
-            loadMarkers();
+            setTimeout(() => {
+                map.invalidateSize();
+                loadMarkers();
+            }, 100);
         }
+
+        // Load markers
+        async function loadMarkers() {
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load markers');
+                }
+
+                const data = await response.json();
+                
+                // Clear existing markers
+                markers.forEach(marker => {
+                    if (map && marker) {
+                        map.removeLayer(marker);
+                    }
+                });
+                markers = [];
+                
+                data.forEach(marker => {
+                    const mapMarker = L.marker([marker.latitude, marker.longitude], {
+                        icon: createCustomIcon(marker.markerType)
+                    });
+                    
+                    mapMarker.bindPopup(`
+                        <div class="font-bold">${marker.name}</div>
+                        <div>${marker.description}</div>
+                        <div class="text-sm text-gray-600">Type: ${marker.markerType}</div>
+                        <button onclick="deleteMarker('${marker.id}')" class="mt-2 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                            Delete
+                        </button>
+                    `);
+                    
+                    mapMarker.addTo(map);
+                    markers.push(mapMarker);
+                });
+            } catch (error) {
+                console.error('Error loading markers:', error);
+            }
+        }
+
+        // Delete marker
+        async function deleteMarker(markerId) {
+            if (!confirm('Are you sure you want to delete this marker?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers/${markerId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+            loadMarkers();
+                } else {
+                    alert('Failed to delete marker');
+                }
+            } catch (error) {
+                console.error('Error deleting marker:', error);
+                alert('Error deleting marker');
+            }
+        }
+
+        // Handle marker form submission
+        document.getElementById('markerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('markerName').value,
+                description: document.getElementById('markerDescription').value,
+                markerType: document.getElementById('markerType').value,
+                latitude: parseFloat(document.getElementById('markerLatitude').value),
+                longitude: parseFloat(document.getElementById('markerLongitude').value)
+            };
+
+            try {
+                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    e.target.reset();
+                    if (selectedMarker) {
+                        map.removeLayer(selectedMarker);
+                        selectedMarker = null;
+                    }
+                    loadMarkers();
+                } else {
+                    alert('Failed to add marker');
+                }
+            } catch (error) {
+                console.error('Error adding marker:', error);
+                alert('Error adding marker');
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Set initial active tab and show admin-keys section by default
+            document.querySelector('.tab-button').classList.add('tab-active');
+            showSection('admin-keys');
+        });
 
         // Fetch and display admin list
         async function loadAdmins() {
             try {
                 const response = await fetch(`${config.apiBaseUrl}/api/auth/admins`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
                 
@@ -621,10 +981,10 @@
             }
 
             try {
-                const response = await fetch(`${config.apiBaseUrl}/api/auth/admin/${adminId}`, {
+                const response = await fetch(`${config.apiBaseUrl}/api/auth/admins/${adminId}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
                 
@@ -649,7 +1009,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     },
                     body: JSON.stringify({
                         username: adminData.username,
@@ -776,215 +1136,19 @@
             }
         }
 
-        // Add marker
-        document.getElementById('markerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const lat = document.getElementById('markerLatitude').value;
-            const lng = document.getElementById('markerLongitude').value;
-            
-            // Validate coordinates
-            if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
-                alert('Please select a location on the map first');
-                return;
-            }
-
-            const markerData = {
-                name: document.getElementById('markerName').value,
-                description: document.getElementById('markerDescription').value,
-                markerType: document.getElementById('markerType').value,
-                latitude: parseFloat(lat),
-                longitude: parseFloat(lng)
-            };
-
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify(markerData)
-                });
-
-                if (response.ok) {
-                    alert('Marker added successfully');
-                    document.getElementById('markerForm').reset();
+        // Clear marker selection
+        function clearMarkerSelection() {
                     if (selectedMarker) {
                         map.removeLayer(selectedMarker);
                         selectedMarker = null;
                     }
-                    loadMarkers();
-                } else {
-                    const data = await response.json();
-                    alert('Failed to add marker: ' + (data.message || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Error adding marker:', error);
-                alert('Error adding marker: ' + error.message);
-            }
-        });
-
-        // Show/Hide sections
-        function showSection(sectionName) {
-            // Update active tab
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('tab-active');
-                if (button.textContent.toLowerCase().includes(sectionName)) {
-                    button.classList.add('tab-active');
-                }
-            });
-
-            // Show/hide sections
-            document.getElementById('admin-keys-section').classList.toggle('hidden', sectionName !== 'admin-keys');
-            document.getElementById('map-management-section').classList.toggle('hidden', sectionName !== 'map-management');
-            
-            // Initialize map if showing map section
-            if (sectionName === 'map-management') {
-                // Use setTimeout to ensure the map container is visible before initializing
-                setTimeout(() => {
-                    if (!map) {
-                        initMap();
-                    } else {
-                        // Refresh markers if map already exists
-                        loadMarkers();
-                        // Force map to update its size
-                        map.invalidateSize();
-                    }
-                }, 100);
-            }
-        }
-
-        // Update marker list
-        function updateMarkerList(markers) {
-            const markerList = document.getElementById('markerList');
-            if (!markerList) return;
-            
-            markerList.innerHTML = '';
-            
-            if (markers.length === 0) {
-                markerList.innerHTML = '<div class="p-2 text-gray-500 text-center">No markers found</div>';
-                return;
-            }
-            
-            markers.forEach(marker => {
-                const markerElement = document.createElement('div');
-                markerElement.className = 'p-2 bg-gray-50 rounded flex justify-between items-center mb-2 hover:bg-gray-100 transition-colors';
-                
-                // Create a clickable element to center the map on this marker
-                const markerInfo = document.createElement('div');
-                markerInfo.className = 'flex items-center cursor-pointer flex-grow';
-                markerInfo.innerHTML = `
-                    <span class="mr-2 text-xl">${markerIcons[marker.markerType] || '📍'}</span>
-                    <div>
-                        <div class="font-medium">${marker.name}</div>
-                        <div class="text-xs text-gray-500">${marker.markerType.replace('_', ' ')}</div>
-                    </div>
-                `;
-                
-                // Add click event to center map on this marker
-                markerInfo.addEventListener('click', () => {
-                    if (map && marker.latitude && marker.longitude) {
-                        map.setView([marker.latitude, marker.longitude], 13);
-                        
-                        // Find and open the popup for this marker
-                        markers.forEach(m => {
-                            if (m.getLatLng().lat === marker.latitude && m.getLatLng().lng === marker.longitude) {
-                                m.openPopup();
-                            }
-                        });
-                    }
-                });
-                
-                // Create delete button
-                const deleteButton = document.createElement('button');
-                deleteButton.className = 'text-red-500 hover:text-red-700 ml-2';
-                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-                deleteButton.addEventListener('click', () => {
-                    deleteMarker(marker.id);
-                });
-                
-                // Assemble the marker element
-                markerElement.appendChild(markerInfo);
-                markerElement.appendChild(deleteButton);
-                markerList.appendChild(markerElement);
-            });
-        }
-
-        // Load markers
-        async function loadMarkers() {
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                if (response.ok) {
-                    markerData = await response.json();
-                    // Clear existing markers
-                    markers.forEach(marker => map.removeLayer(marker));
-                    markers = [];
-                    
-                    // Add markers to map
-                    markerData.forEach(marker => {
-                        if (marker.latitude && marker.longitude) {
-                            const mapMarker = L.marker([marker.latitude, marker.longitude], {
-                                icon: createCustomIcon(marker.markerType)
-                            })
-                                .bindPopup(`
-                                    <div class="font-bold">${marker.name}</div>
-                                    <div>${marker.description}</div>
-                                    <div class="text-sm text-gray-600">Type: ${marker.markerType}</div>
-                                    <button onclick="deleteMarker('${marker.id}')" 
-                                            class="mt-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                                        Delete
-                                    </button>
-                                `)
-                                .addTo(map);
-                            markers.push(mapMarker);
-                        }
-                    });
-
-                    // Update marker list
-                    updateMarkerList(markerData);
-                }
-            } catch (error) {
-                console.error('Error loading markers:', error);
-                alert('Error loading markers: ' + error.message);
-            }
-        }
-
-        // Delete marker
-        async function deleteMarker(markerId) {
-            if (!confirm('Are you sure you want to delete this marker?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`${config.apiBaseUrl}/api/markers/${markerId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                if (response.ok) {
-                    loadMarkers();
-                    alert('Marker deleted successfully');
-                } else {
-                    const error = await response.json();
-                    alert('Failed to delete marker: ' + error.message);
-                }
-            } catch (error) {
-                console.error('Error deleting marker:', error);
-                alert('Error deleting marker: ' + error.message);
-            }
+            document.getElementById('markerLatitude').value = '';
+            document.getElementById('markerLongitude').value = '';
         }
 
         // Handle logout
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
             window.location.href = '/login.html';
         });
 
@@ -1056,38 +1220,158 @@
             }
         });
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            // Set initial active tab
-            document.querySelector('.tab-button').classList.add('tab-active');
-            
-            // Load initial data
-            loadAdmins();
-            
-            // Initialize map if map management section is visible
-            if (!document.getElementById('map-management-section').classList.contains('hidden')) {
-                setTimeout(() => {
-                    initMap();
-                }, 100);
-            }
-        });
+        // Add loadReports function
+        async function loadReports() {
+            try {
+                // Load users statistics
+                const statsResponse = await fetch(`${config.apiBaseUrl}/api/auth/statistics`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    }
+                });
 
-        // Clear marker selection
-        function clearMarkerSelection() {
-            // Clear form fields
-            document.getElementById('markerLatitude').value = '';
-            document.getElementById('markerLongitude').value = '';
-            
-            // Remove temporary marker if exists
-            if (selectedMarker) {
-                map.removeLayer(selectedMarker);
-                selectedMarker = null;
+                if (!statsResponse.ok) {
+                    throw new Error('Failed to load statistics');
+                }
+
+                const stats = await statsResponse.json();
+                document.getElementById('totalUsers').textContent = stats.totalUsers || '0';
+                document.getElementById('totalAdmins').textContent = stats.totalAdmins || '0';
+                document.getElementById('totalMarkers').textContent = stats.totalMarkers || '0';
+
+                // Load all users
+                const usersResponse = await fetch(`${config.apiBaseUrl}/api/auth/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    }
+                });
+
+                if (!usersResponse.ok) {
+                    throw new Error('Failed to load users');
+                }
+
+                const users = await usersResponse.json();
+                const usersTable = document.getElementById('usersTable');
+                usersTable.innerHTML = '';
+
+                if (users.length === 0) {
+                    usersTable.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                No users found
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-user-circle text-gray-400"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">${user.username}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">${user.email}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'SUPERADMIN' ? 'bg-purple-100 text-purple-800' : user.role === 'ADMIN' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                                    ${user.role}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${new Date(user.createdAt).toLocaleDateString()}
+                            </td>
+                        `;
+                        usersTable.appendChild(row);
+                    });
+                }
+
+                // Load markers by admin statistics
+                const markersResponse = await fetch(`${config.apiBaseUrl}/api/auth/markers-by-admin`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    }
+                });
+
+                if (!markersResponse.ok) {
+                    throw new Error('Failed to load markers by admin');
+                }
+
+                const markerStats = await markersResponse.json();
+                const tableBody = document.getElementById('markersByAdminTable');
+                tableBody.innerHTML = '';
+
+                if (markerStats.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                No marker statistics available
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    markerStats.forEach(stat => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-user-shield text-gray-400"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">${stat.adminName}</div>
+                                        <div class="text-sm text-gray-500">${stat.adminEmail}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${stat.totalMarkers}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${stat.lastMarkerDate ? new Date(stat.lastMarkerDate).toLocaleDateString() : 'N/A'}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-wrap gap-2">
+                                    ${Object.entries(stat.markerTypes || {}).map(([type, count]) => `
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            ${type}: ${count}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                // Show error message in the UI
+                const sections = ['totalUsers', 'totalAdmins', 'totalMarkers'];
+                sections.forEach(id => {
+                    document.getElementById(id).textContent = '-';
+                });
+                
+                document.getElementById('usersTable').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-red-500">
+                            Error loading users. Please try again later.
+                        </td>
+                    </tr>
+                `;
+                
+                document.getElementById('markersByAdminTable').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-red-500">
+                            Error loading reports. Please try again later.
+                        </td>
+                    </tr>
+                `;
             }
         }
     </script>
