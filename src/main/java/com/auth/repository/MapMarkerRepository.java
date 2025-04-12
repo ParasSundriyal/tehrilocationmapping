@@ -8,4 +8,5 @@ public interface MapMarkerRepository extends MongoRepository<MapMarker, String> 
     List<MapMarker> findByEnabled(boolean enabled);
     List<MapMarker> findByMarkerType(String markerType);
     List<MapMarker> findByCreatedBy(String createdBy);
+    List<MapMarker> findByCreatedByAndEnabled(String createdBy, boolean enabled);
 } 

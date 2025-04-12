@@ -30,8 +30,27 @@ public class MarkerController {
     private JwtUtil jwtUtil;
 
     @GetMapping
-    public ResponseEntity<List<MapMarker>> getAllMarkers() {
-        return ResponseEntity.ok(markerRepository.findByEnabled(true));
+    public ResponseEntity<?> getAllMarkers(@RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            if (token != null && token.startsWith("Bearer ")) {
+                // Extract username from token
+                String username = jwtUtil.extractUsername(token.substring(7));
+                User user = userRepository.findByUsername(username).orElseThrow();
+
+                // If user is an admin, return only their markers
+                if (user.isAdmin()) {
+                    return ResponseEntity.ok(markerRepository.findByCreatedByAndEnabled(user.getId(), true));
+                }
+                // If user is a superadmin, return all markers
+                else if (user.isSuperAdmin()) {
+                    return ResponseEntity.ok(markerRepository.findByEnabled(true));
+                }
+            }
+            // For public access or non-admin users, return all enabled markers
+            return ResponseEntity.ok(markerRepository.findByEnabled(true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Error fetching markers: " + e.getMessage()));
+        }
     }
 
     @PostMapping

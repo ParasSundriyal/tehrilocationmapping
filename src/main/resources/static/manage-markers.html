@@ -440,7 +440,7 @@
             try {
                 const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
 
@@ -514,7 +514,7 @@
                 const response = await fetch(`${config.apiBaseUrl}/api/markers/${markerId}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
 
@@ -567,7 +567,7 @@
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     },
                     body: JSON.stringify(updatedData)
                 });
@@ -589,12 +589,12 @@
         document.getElementById('typeFilter').addEventListener('change', filterMarkers);
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
             window.location.href = '/login.html';
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             if (!token) {
                 window.location.href = 'login.html';
                 return;

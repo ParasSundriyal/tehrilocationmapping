@@ -1,7 +1,9 @@
 package com.auth.controller;
 
 import com.auth.model.User;
+import com.auth.model.MapMarker;
 import com.auth.repository.UserRepository;
+import com.auth.repository.MapMarkerRepository;
 import com.auth.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:8080", "https://tehrilocationmapping.onrender.com"}, allowCredentials = "true")
 public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -32,6 +35,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private MapMarkerRepository markerRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -74,6 +80,12 @@ public class AuthController {
             if (!user.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 logger.warn("Signup failed: Invalid email format for {}", user.getEmail());
                 return ResponseEntity.badRequest().body(Map.of("message", "Invalid email format"));
+            }
+
+            // Validate mobile number format (10 digits)
+            if (user.getMobile() == null || !user.getMobile().matches("^\\d{10}$")) {
+                logger.warn("Signup failed: Invalid mobile number format for user {}", user.getUsername());
+                return ResponseEntity.badRequest().body(Map.of("message", "Mobile number must be 10 digits"));
             }
 
             // Validate password strength (at least 6 characters)
@@ -250,6 +262,115 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("Error fetching user details", e);
             return ResponseEntity.badRequest().body(Map.of("message", "Error fetching user details: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<?> getStatistics(@RequestHeader("Authorization") String token) {
+        try {
+            // Extract username from token
+            String username = jwtUtil.extractUsername(token.substring(7));
+            User currentUser = userRepository.findByUsername(username).orElseThrow();
+
+            // Only superadmin can view statistics
+            if (!currentUser.isSuperAdmin()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Only superadmin can view statistics"));
+            }
+
+            long totalUsers = userRepository.count();
+            long totalAdmins = userRepository.countByRole("ADMIN");
+            long totalMarkers = markerRepository.count();
+
+            Map<String, Object> statistics = new HashMap<>();
+            statistics.put("totalUsers", totalUsers);
+            statistics.put("totalAdmins", totalAdmins);
+            statistics.put("totalMarkers", totalMarkers);
+
+            return ResponseEntity.ok(statistics);
+        } catch (Exception e) {
+            logger.error("Error fetching statistics", e);
+            return ResponseEntity.badRequest().body(Map.of("message", "Error fetching statistics: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/markers-by-admin")
+    public ResponseEntity<?> getMarkersByAdmin(@RequestHeader("Authorization") String token) {
+        try {
+            // Extract username from token
+            String username = jwtUtil.extractUsername(token.substring(7));
+            User currentUser = userRepository.findByUsername(username).orElseThrow();
+
+            // Only superadmin can view markers by admin
+            if (!currentUser.isSuperAdmin()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Only superadmin can view markers by admin"));
+            }
+
+            List<User> admins = userRepository.findByRole("ADMIN");
+            List<Map<String, Object>> markerStats = new ArrayList<>();
+
+            for (User admin : admins) {
+                List<MapMarker> adminMarkers = markerRepository.findByCreatedBy(admin.getId());
+                
+                // Only include admins who have created markers
+                if (!adminMarkers.isEmpty()) {
+                    Map<String, Object> adminStat = new HashMap<>();
+                    adminStat.put("adminName", admin.getUsername());
+                    adminStat.put("adminEmail", admin.getEmail());
+                    adminStat.put("totalMarkers", adminMarkers.size());
+                    
+                    // Get last marker date
+                    LocalDateTime lastMarkerDate = adminMarkers.stream()
+                            .map(MapMarker::getCreatedAt)
+                            .max(LocalDateTime::compareTo)
+                            .orElse(null);
+                    adminStat.put("lastMarkerDate", lastMarkerDate);
+
+                    // Count marker types
+                    Map<String, Long> markerTypes = adminMarkers.stream()
+                            .collect(Collectors.groupingBy(
+                                MapMarker::getMarkerType,
+                                Collectors.counting()
+                            ));
+                    adminStat.put("markerTypes", markerTypes);
+
+                    markerStats.add(adminStat);
+                }
+            }
+
+            return ResponseEntity.ok(markerStats);
+        } catch (Exception e) {
+            logger.error("Error fetching markers by admin", e);
+            return ResponseEntity.badRequest().body(Map.of("message", "Error fetching markers by admin: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers(@RequestHeader("Authorization") String token) {
+        try {
+            // Extract username from token
+            String username = jwtUtil.extractUsername(token.substring(7));
+            User currentUser = userRepository.findByUsername(username).orElseThrow();
+
+            // Only superadmin can view all users
+            if (!currentUser.isSuperAdmin()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Only superadmin can view all users"));
+            }
+
+            List<Map<String, Object>> usersList = userRepository.findAll().stream()
+                .map(user -> {
+                    Map<String, Object> userMap = new HashMap<>();
+                    userMap.put("username", user.getUsername());
+                    userMap.put("email", user.getEmail());
+                    userMap.put("role", user.getRole());
+                    userMap.put("createdAt", user.getCreatedAt());
+                    return userMap;
+                })
+                .collect(Collectors.toList());
+
+            return ResponseEntity.ok(usersList);
+        } catch (Exception e) {
+            logger.error("Error fetching users", e);
+            return ResponseEntity.badRequest().body(Map.of("message", "Error fetching users: " + e.getMessage()));
         }
     }
 } 

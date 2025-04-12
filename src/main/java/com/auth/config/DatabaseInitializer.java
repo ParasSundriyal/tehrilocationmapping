@@ -27,6 +27,7 @@ public class DatabaseInitializer implements CommandLineRunner {
             superadmin.setEmail("superadmin@tehrimap.com");
             superadmin.setPassword(passwordEncoder.encode("superadmin123")); // You should change this password
             superadmin.setRole("SUPERADMIN");
+            superadmin.setMobile("9876543210"); // Default mobile number for superadmin
             superadmin.setCreatedAt(LocalDateTime.now());
             superadmin.setEnabled(true);
             

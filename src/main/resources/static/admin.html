@@ -239,6 +239,11 @@
         @media (max-width: 768px) {
             .navbar {
                 padding: 0.5rem;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
             }
             
             .navbar > div {
@@ -281,6 +286,7 @@
             
             .grid {
                 grid-template-columns: 1fr !important;
+                margin-top: 64px; /* Add margin to account for fixed navbar */
             }
             
             .col-span-1 {
@@ -574,7 +580,7 @@
             try {
                 const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
 
@@ -617,7 +623,7 @@
 
         // Initialize map when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             if (!token) {
                 window.location.href = 'login.html';
                 return;
@@ -821,7 +827,7 @@
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                         },
                         body: JSON.stringify(updatedMarkerData)
                     });
@@ -866,7 +872,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     },
                     body: JSON.stringify(markerData)
                 });
@@ -902,7 +908,7 @@
                     const response = await fetch(`${config.apiBaseUrl}/api/markers/${markerId}`, {
                         method: 'DELETE',
                         headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                         }
                     });
 
@@ -921,7 +927,7 @@
 
         // Add logout functionality
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
             window.location.href = '/login.html';
         });
     </script>

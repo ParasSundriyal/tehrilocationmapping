@@ -22,9 +22,17 @@
             transition: transform 0.2s;
         }
         #map {
-            height: 70vh;
+            height: calc(100vh - 200px);
             width: 100%;
             border-radius: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            #map {
+                height: calc(100vh - 150px);
+            }
+            .marker-list {
+                max-height: 200px;
+            }
         }
         .marker-list {
             max-height: 400px;
@@ -189,7 +197,7 @@
             try {
                 const response = await fetch(`${config.apiBaseUrl}/api/auth/user`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
                 
@@ -211,7 +219,7 @@
             try {
                 const response = await fetch(`${config.apiBaseUrl}/api/markers`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
 
@@ -270,13 +278,13 @@
 
         // Logout function
         function logout() {
-            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
             window.location.href = 'login.html';
         }
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             if (!token) {
                 window.location.href = 'login.html';
                 return;

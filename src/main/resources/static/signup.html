@@ -8,75 +8,175 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .page-background {
+            background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: calc(100vh - 64px - 60px);
         }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .signup-container {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .submit-button {
+            background: linear-gradient(45deg, #4F46E5, #7C3AED);
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
         .error-message {
-            color: #e53e3e;
+            background: rgba(254, 226, 226, 0.9);
+            border: 1px solid rgba(252, 129, 129, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: #dc2626;
             font-size: 0.875rem;
             margin-top: 0.5rem;
-            padding: 0.5rem;
-            background-color: #fff5f5;
-            border: 1px solid #fc8181;
-            border-radius: 0.25rem;
         }
-        .hidden {
-            display: none;
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem;
+            }
+            
+            .navbar .flex {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .navbar .space-x-8,
+            .navbar .space-x-4 {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .signup-container {
+                padding: 1rem;
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+            
+            .footer-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+                width: 100%;
+            }
+            
+            .footer-buttons button,
+            .footer-buttons a {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body class="min-h-screen">
     <!-- Navigation -->
     <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-8">
+        <div class="max-w-7xl mx-auto px-4 py-2">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex flex-col md:flex-row items-center gap-4 md:gap-8">
                     <a href="/" class="text-2xl font-bold text-blue-600">TehriMap</a>
-                    <div class="flex space-x-4">
+                    <div class="flex flex-col md:flex-row gap-4">
                         <a href="/" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
+                <div class="flex flex-col md:flex-row gap-4">
                     <a href="login.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                    <a href="signup.html" class="text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Sign Up</a>
+                    <a href="signup.html" class="text-blue-600 px-3 py-2 rounded-md text-sm font-medium bg-blue-50">Sign Up</a>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="gradient-bg flex items-center justify-center flex-grow py-12">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Sign Up</h2>
+    <div class="page-background flex items-center justify-center p-4">
+        <div class="glass-effect p-6 md:p-8 rounded-xl w-full max-w-md signup-container">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Create Account</h2>
             <form id="signupForm" class="space-y-4">
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
                         Username
                     </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="username" type="text" placeholder="Username" required>
+                    <input class="input-field shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           id="username" type="text" placeholder="Choose a username" required>
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
                         Email
                     </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="email" type="email" placeholder="Email" required>
+                    <input class="input-field shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           id="email" type="email" placeholder="Enter your email" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="mobile">
+                        Mobile Number
+                    </label>
+                    <input class="input-field shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           id="mobile" type="tel" placeholder="Enter your mobile number" pattern="[0-9]{10}" required>
+                    <p class="text-sm text-gray-500 mt-1">Enter 10-digit mobile number</p>
                 </div>
                 <div>
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
                         Password
                     </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="password" type="password" placeholder="Password" required>
+                    <input class="input-field shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           id="password" type="password" placeholder="Create a password" required>
                     <p class="text-sm text-gray-500 mt-1">Password must be at least 6 characters long</p>
                 </div>
                 <div id="errorMessage" class="error-message hidden"></div>
-                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
-                        type="submit">
-                    Sign Up
-                </button>
+                <div class="flex items-center justify-between pt-2">
+                    <button class="submit-button text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline w-full"
+                            type="submit">
+                        Create Account
+                    </button>
+                </div>
                 <div class="text-center mt-4">
-                    <a href="login.html" class="text-blue-500 hover:text-blue-700 text-sm">Already have an account? Log in</a>
+                    <a href="login.html" class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-300">Already have an account? Log in</a>
                 </div>
             </form>
         </div>
@@ -88,6 +188,7 @@
             
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
+            const mobile = document.getElementById('mobile').value;
             const password = document.getElementById('password').value;
             const errorMessageDiv = document.getElementById('errorMessage');
 
@@ -100,9 +201,15 @@
                 return;
             }
 
+            if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+                showError('Please enter a valid 10-digit mobile number');
+                return;
+            }
+
             const payload = {
                 username: username,
                 email: email,
+                mobile: mobile,
                 password: password
             };
 
@@ -165,5 +272,28 @@
             }
         }
     </script>
+
+    <!-- Modern Footer -->
+    <footer class="bg-gray-900 text-white w-full">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 footer-content">
+                <div class="text-sm text-center md:text-left">
+                    © 2024 TehriMap. All rights reserved.
+                </div>
+                <div class="flex flex-col md:flex-row items-center gap-4 footer-buttons">
+                    <a href="mailto:paras.starkmarkup@gmail.com" class="text-gray-400 hover:text-white text-sm transition flex items-center justify-center w-full md:w-auto">
+                        <i class="fas fa-envelope mr-2"></i>
+                        Contact
+                    </a>
+                    <button class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold py-2 px-4 rounded transition duration-300 w-full md:w-auto">
+                        <i class="fas fa-headset mr-2"></i>
+                        Support
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 </body>
 </html> 

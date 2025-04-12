@@ -24,6 +24,7 @@ public class User implements UserDetails {
 
     private String password;
     private String role = "USER"; // Possible values: SUPERADMIN, ADMIN, USER
+    private String mobile; // Added mobile number field
     private LocalDateTime createdAt = LocalDateTime.now();
     private boolean enabled = true;
     private String createdBy; // ID of the admin who created this user
@@ -103,6 +104,14 @@ public class User implements UserDetails {
 
     public void setLastModifiedBy(String lastModifiedBy) {
         this.lastModifiedBy = lastModifiedBy;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 
     // UserDetails implementation

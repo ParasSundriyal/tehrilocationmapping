@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
 
@@ -34,7 +35,8 @@ public class SecurityConfig {
             .csrf().disable()
             .authorizeHttpRequests()
             .requestMatchers(
-                "/api/auth/**", 
+                "/api/auth/login", 
+                "/api/auth/signup",
                 "/", 
                 "/index.html", 
                 "/login.html", 
@@ -52,6 +54,7 @@ public class SecurityConfig {
                 "/*.html",
                 "/error"
             ).permitAll()
+            .requestMatchers("/api/auth/statistics", "/api/auth/markers-by-admin", "/api/auth/users").hasAuthority("ROLE_SUPERADMIN")
             .requestMatchers("/superadmin.html").hasAuthority("ROLE_SUPERADMIN")
             .requestMatchers("/admin.html").hasAuthority("ROLE_ADMIN")
             .requestMatchers("/dashboard.html").authenticated()
@@ -62,7 +65,11 @@ public class SecurityConfig {
             .and()
             .exceptionHandling()
             .authenticationEntryPoint((request, response, authException) -> {
-                response.sendRedirect("/login.html");
+                if (request.getRequestURI().startsWith("/api/")) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                } else {
+                    response.sendRedirect("/login.html");
+                }
             });
         
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
@@ -73,10 +80,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:8080",
+            "https://tehrilocationmapping.onrender.com"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
-        configuration.setExposedHeaders(Arrays.asList("x-auth-token"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Auth-Token"));
+        configuration.setExposedHeaders(Arrays.asList("X-Auth-Token"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
