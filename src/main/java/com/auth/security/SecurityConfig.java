@@ -52,7 +52,9 @@ public class SecurityConfig {
                 "/*.jpeg", 
                 "/*.gif",
                 "/*.html",
-                "/error"
+                "/error",
+                "/api/occurrences",
+                "/api/occurrences/**"
             ).permitAll()
             .requestMatchers("/api/auth/statistics", "/api/auth/markers-by-admin", "/api/auth/users").hasAuthority("ROLE_SUPERADMIN")
             .requestMatchers("/superadmin.html").hasAuthority("ROLE_SUPERADMIN")

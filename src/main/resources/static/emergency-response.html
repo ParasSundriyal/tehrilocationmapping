@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Response Coordination - TehriMap</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .emergency-card {
+            transition: all 0.3s ease;
+        }
+        .emergency-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .call-button {
+            transition: all 0.2s ease;
+        }
+        .call-button:hover {
+            transform: scale(1.05);
+        }
+        .instructions-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .instructions-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Emergency Response Coordination</h1>
+            <div id="occurrence-details" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Emergency Instructions -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                Emergency Instructions
+            </h2>
+            <ul id="emergency-instructions" class="instructions-list space-y-2">
+                <!-- Will be populated by JavaScript -->
+            </ul>
+        </div>
+
+        <!-- Emergency Contacts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Hospitals Section -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-hospital text-blue-500 mr-2"></i>
+                    Hospitals
+                </h2>
+                <div id="hospitals-list" class="space-y-4">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Fire Brigade Section -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-fire-extinguisher text-red-500 mr-2"></i>
+                    Fire Brigade
+                </h2>
+                <div id="fire-brigade-list" class="space-y-4">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Police Section -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-shield-alt text-indigo-500 mr-2"></i>
+                    Police Stations
+                </h2>
+                <div id="police-list" class="space-y-4">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const occurrenceId = urlParams.get('id');
+            
+            if (!occurrenceId) {
+                alert('No occurrence ID provided');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/emergency/response/${occurrenceId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load emergency response data');
+                }
+
+                const data = await response.json();
+                displayOccurrenceDetails(data.occurrence);
+                displayEmergencyInstructions(data.instructions);
+                displayEmergencyContacts(data.emergencyContacts);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load emergency response data');
+            }
+        });
+
+        function displayOccurrenceDetails(occurrence) {
+            const detailsContainer = document.getElementById('occurrence-details');
+            detailsContainer.innerHTML = `
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">${occurrence.title}</h3>
+                    <p class="text-gray-600 mb-4">${occurrence.description}</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Location</p>
+                            <p class="font-medium">${occurrence.district}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Reported At</p>
+                            <p class="font-medium">${new Date(occurrence.reportedAt).toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end items-start">
+                    <span class="px-4 py-2 bg-red-100 text-red-800 rounded-full font-semibold">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        ${occurrence.type}
+                    </span>
+                </div>
+            `;
+        }
+
+        function displayEmergencyInstructions(instructions) {
+            const instructionsContainer = document.getElementById('emergency-instructions');
+            instructionsContainer.innerHTML = instructions.split('\n')
+                .map(instruction => `
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                        <span>${instruction}</span>
+                    </li>
+                `).join('');
+        }
+
+        function displayEmergencyContacts(contacts) {
+            // Display Hospitals
+            displayContactList('hospitals-list', contacts.HOSPITAL || [], 'hospital-bed');
+
+            // Display Fire Brigade
+            displayContactList('fire-brigade-list', contacts.FIRE_BRIGADE || [], 'fire-truck');
+
+            // Display Police
+            displayContactList('police-list', contacts.POLICE || [], 'police-car');
+        }
+
+        function displayContactList(containerId, contacts, icon) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = contacts.length ? contacts.map(contact => `
+                <div class="emergency-card bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2">${contact.name}</h3>
+                    <p class="text-sm text-gray-600 mb-2">${contact.address}</p>
+                    <a href="tel:${contact.phoneNumber}" 
+                       class="call-button inline-flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                        <i class="fas fa-phone-alt mr-2"></i>
+                        ${contact.phoneNumber}
+                    </a>
+                </div>
+            `).join('') : '<p class="text-gray-500">No contacts available</p>';
+        }
+    </script>
+</body>
+</html> 
