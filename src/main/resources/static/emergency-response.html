@@ -39,6 +39,34 @@
             </div>
         </div>
 
+        <!-- Notification Status -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-bell text-blue-500 mr-2"></i>
+                Notification Status
+            </h2>
+            <div id="notification-status" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="notification-card bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2">Hospitals</h3>
+                    <div id="hospital-notification" class="text-sm text-gray-600">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Notifying...
+                    </div>
+                </div>
+                <div class="notification-card bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2">Fire Brigade</h3>
+                    <div id="fire-notification" class="text-sm text-gray-600">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Notifying...
+                    </div>
+                </div>
+                <div class="notification-card bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-2">Police</h3>
+                    <div id="police-notification" class="text-sm text-gray-600">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Notifying...
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Emergency Instructions -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">
@@ -181,6 +209,51 @@
                 </div>
             `).join('') : '<p class="text-gray-500">No contacts available</p>';
         }
+
+        async function updateNotificationStatus(occurrenceId) {
+            try {
+                const response = await fetch(`/api/emergency/notifications/${occurrenceId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    const status = await response.json();
+                    
+                    // Update notification status for each service
+                    updateServiceNotification('hospital-notification', status.HOSPITAL);
+                    updateServiceNotification('fire-notification', status.FIRE_BRIGADE);
+                    updateServiceNotification('police-notification', status.POLICE);
+                }
+            } catch (error) {
+                console.error('Error updating notification status:', error);
+            }
+        }
+
+        function updateServiceNotification(elementId, status) {
+            const element = document.getElementById(elementId);
+            if (status) {
+                element.innerHTML = `
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                    Notified successfully
+                `;
+            } else {
+                element.innerHTML = `
+                    <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                    Notification failed
+                `;
+            }
+        }
+
+        // Call updateNotificationStatus when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const occurrenceId = urlParams.get('id');
+            if (occurrenceId) {
+                updateNotificationStatus(occurrenceId);
+            }
+        });
     </script>
 </body>
 </html> 

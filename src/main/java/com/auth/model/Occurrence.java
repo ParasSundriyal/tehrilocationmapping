@@ -13,6 +13,7 @@ public class Occurrence {
     private String title;
     private String description;
     private String location;
+    private String district;
     private String reporterId;
     private String reporterName;
     private String reporterPhone;
@@ -60,6 +61,14 @@ public class Occurrence {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getDistrict() {
+        return district;
+    }
+
+    public void setDistrict(String district) {
+        this.district = district;
     }
 
     public String getReporterId() {
