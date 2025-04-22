@@ -15,7 +15,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import jakarta.servlet.http.HttpServletResponse;
-
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import java.util.Arrays;
 
 @Configuration
@@ -31,50 +31,50 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors().and()
-            .csrf().disable()
-            .authorizeHttpRequests()
-            .requestMatchers(
-                "/api/auth/login", 
-                "/api/auth/signup",
-                "/", 
-                "/index.html", 
-                "/login.html", 
-                "/signup.html",
-                "/css/**", 
-                "/js/**", 
-                "/static/**",
-                "/*.js", 
-                "/*.css", 
-                "/*.ico", 
-                "/*.png", 
-                "/*.jpg", 
-                "/*.jpeg", 
-                "/*.gif",
-                "/*.html",
-                "/error",
-                "/api/occurrences",
-                "/api/occurrences/**"
-            ).permitAll()
-            .requestMatchers("/api/auth/statistics", "/api/auth/markers-by-admin", "/api/auth/users").hasAuthority("ROLE_SUPERADMIN")
-            .requestMatchers("/superadmin.html").hasAuthority("ROLE_SUPERADMIN")
-            .requestMatchers("/admin.html").hasAuthority("ROLE_ADMIN")
-            .requestMatchers("/dashboard.html").authenticated()
-            .anyRequest().authenticated()
-            .and()
-            .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .and()
-            .exceptionHandling()
-            .authenticationEntryPoint((request, response, authException) -> {
-                if (request.getRequestURI().startsWith("/api/")) {
-                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-                } else {
-                    response.sendRedirect("/login.html");
-                }
-            });
-        
-        http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/api/auth/login", 
+                    "/api/auth/signup",
+                    "/", 
+                    "/index.html", 
+                    "/login.html", 
+                    "/signup.html",
+                    "/css/**", 
+                    "/js/**", 
+                    "/static/**",
+                    "/*.js", 
+                    "/*.css", 
+                    "/*.ico", 
+                    "/*.png", 
+                    "/*.jpg", 
+                    "/*.jpeg", 
+                    "/*.gif",
+                    "/*.html",
+                    "/error",
+                    "/api/occurrences",
+                    "/api/occurrences/**"
+                ).permitAll()
+                .requestMatchers("/api/auth/statistics", "/api/auth/markers-by-admin", "/api/auth/users").hasAuthority("ROLE_SUPERADMIN")
+                .requestMatchers("/superadmin.html").hasAuthority("ROLE_SUPERADMIN")
+                .requestMatchers("/admin.html").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/dashboard.html").authenticated()
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                    } else {
+                        response.sendRedirect("/login.html");
+                    }
+                })
+            )
+            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
     }
@@ -106,4 +106,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-} 
+}

@@ -19,9 +19,19 @@ public class OccurrenceService {
     @Autowired
     private GridFSService gridFSService;
 
+    @Autowired
+    private EmergencyNotificationService emergencyNotificationService;
+
+    @Autowired
+    private DistrictService districtService;
+
     public Occurrence createOccurrence(Occurrence occurrence, List<MultipartFile> photos) {
         // Set current date and time
         occurrence.setReportedAt(LocalDateTime.now());
+        
+        // Determine district based on coordinates
+        String district = districtService.findDistrict(occurrence.getLatitude(), occurrence.getLongitude());
+        occurrence.setDistrict(district);
         
         // Set initial status
         occurrence.setStatus("PENDING");
@@ -66,9 +76,11 @@ public class OccurrenceService {
             occurrence.setVerificationNotes(verificationNotes);
             occurrence.setVerifiedAt(LocalDateTime.now());
             
-            // If verified, automatically show on map
+            // If verified, automatically show on map and notify emergency contacts
             if ("VERIFIED".equals(status)) {
                 occurrence.setActiveOnMap(true);
+                // Trigger emergency notifications
+                emergencyNotificationService.notifyEmergencyContacts(occurrence);
             }
             
             return occurrenceRepository.save(occurrence);

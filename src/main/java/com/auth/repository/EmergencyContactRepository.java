@@ -8,7 +8,12 @@ import java.util.List;
 
 @Repository
 public interface EmergencyContactRepository extends MongoRepository<EmergencyContact, String> {
-    List<EmergencyContact> findByDistrictAndServiceTypeAndIsActiveTrue(String district, String serviceType);
-    List<EmergencyContact> findByDistrictAndIsActiveTrue(String district);
-    List<EmergencyContact> findByIsActiveTrue();
+    
+    List<EmergencyContact> findByDistrictAndIsActive(String district, boolean isActive);
+    
+    List<EmergencyContact> findByServiceTypeAndIsActive(String serviceType, boolean isActive);
+    
+    List<EmergencyContact> findByDistrictAndServiceTypeAndIsActive(String district, String serviceType, boolean isActive);
+    
+    List<EmergencyContact> findByIsActive(boolean isActive);
 } 
