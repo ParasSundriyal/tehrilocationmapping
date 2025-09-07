@@ -51,7 +51,7 @@ public class NotificationService {
             }
             
             // 4. Try Push Notification (if available)
-            if (pushService != null && contact.getDeviceToken() != null) {
+            if (pushService != null && contact.getDeviceToken() != null && !contact.getDeviceToken().trim().isEmpty()) {
                 pushService.sendPush(
                     contact.getDeviceToken(),
                     "Emergency Alert",

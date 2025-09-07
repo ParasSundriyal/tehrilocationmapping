@@ -17,7 +17,7 @@ public class EmergencyNotificationService {
     @Autowired
     private TwilioNotificationService twilioNotificationService;
 
-    public void notifyEmergencyServices(Occurrence occurrence) {
+    public void notifyEmergencyContacts(Occurrence occurrence) {
         List<EmergencyContact> relevantContacts = getRelevantEmergencyContacts(occurrence);
         
         for (EmergencyContact contact : relevantContacts) {
