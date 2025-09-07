@@ -5,20 +5,59 @@ import com.auth.model.Occurrence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class NotificationService {
 
-    @Autowired
+    @Autowired(required = false)
     private TwilioNotificationService twilioService;
+
+    @Autowired(required = false)
+    private EmailNotificationService emailService;
+
+    @Autowired(required = false)
+    private WhatsAppNotificationService whatsAppService;
+
+    @Autowired(required = false)
+    private PushNotificationService pushService;
 
     public void sendEmergencyNotification(Occurrence occurrence, EmergencyContact contact) {
         String message = createEmergencyMessage(occurrence, contact);
         
+        // Try different notification methods in order of priority
         try {
-            if (contact.getPhoneNumber() != null) {
+            // 1. Try SMS first (fastest)
+            if (twilioService != null && contact.getPhoneNumber() != null) {
                 twilioService.sendSMS(contact.getPhoneNumber(), message);
+                return;
+            }
+            
+            // 2. Try WhatsApp (good for India)
+            if (whatsAppService != null && contact.getPhoneNumber() != null) {
+                whatsAppService.sendWhatsApp(contact.getPhoneNumber(), message);
+                return;
+            }
+            
+            // 3. Try Email (most reliable)
+            if (emailService != null && contact.getEmail() != null) {
+                emailService.sendEmail(
+                    contact.getEmail(),
+                    "Emergency Alert: " + occurrence.getTitle(),
+                    message
+                );
+                return;
+            }
+            
+            // 4. Try Push Notification (if available)
+            if (pushService != null && contact.getDeviceToken() != null && !contact.getDeviceToken().trim().isEmpty()) {
+                pushService.sendPush(
+                    contact.getDeviceToken(),
+                    "Emergency Alert",
+                    message
+                );
             }
         } catch (Exception e) {
+            // Log the error and try next method
             System.err.println("Failed to send notification: " + e.getMessage());
         }
     }
