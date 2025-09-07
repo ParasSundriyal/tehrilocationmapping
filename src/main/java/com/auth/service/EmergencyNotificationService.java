@@ -33,4 +33,4 @@ public class EmergencyNotificationService {
     private List<EmergencyContact> getRelevantEmergencyContacts(Occurrence occurrence) {
         return emergencyContactRepository.findByDistrictAndIsActive(occurrence.getDistrict(), true);
     }
-} 
+}

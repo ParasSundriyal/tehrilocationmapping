@@ -5,8 +5,6 @@ import com.auth.model.Occurrence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class NotificationService {
@@ -66,21 +64,19 @@ public class NotificationService {
 
     private String createEmergencyMessage(Occurrence occurrence, EmergencyContact contact) {
         return String.format(
-            "EMERGENCY ALERT\n\n" +
-            "Type: %s\n" +
-            "Location: %s, %s\n" +
-            "Coordinates: %f, %f\n" +
-            "Reported by: %s (%s)\n" +
-            "Description: %s\n\n" +
-            "Please respond immediately.",
+            "🚨 EMERGENCY ALERT - %s\n\n" +
+            "📍 Location: %s, %s\n" +
+            "📱 Reporter: %s (%s)\n" +
+            "📝 Details: %s\n\n" +
+            "⚠ Please respond immediately.\n" +
+            "🔗 View on map: https://tehrimap.com/occurrence/%s",
             occurrence.getTitle(),
             occurrence.getLocation(),
             occurrence.getDistrict(),
-            occurrence.getLatitude(),
-            occurrence.getLongitude(),
             occurrence.getReporterName(),
             occurrence.getReporterPhone(),
-            occurrence.getDescription()
+            occurrence.getDescription(),
+            occurrence.getId()
         );
     }
-} 
+}

@@ -23,4 +23,4 @@ public class EmergencyContact {
     private String address;
     private String notes;
     private String deviceToken; // For push notifications
-} 
+}

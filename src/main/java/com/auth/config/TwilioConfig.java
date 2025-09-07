@@ -22,6 +22,14 @@ public class TwilioConfig {
         Twilio.init(accountSid, authToken);
     }
 
+    public String getAccountSid() {
+        return accountSid;
+    }
+
+    public String getAuthToken() {
+        return authToken;
+    }
+
     public String getPhoneNumber() {
         return phoneNumber;
     }
